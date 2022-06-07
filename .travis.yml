@@ -1,0 +1,12 @@
+language: python
+python:
+  - "3.8"
+cache: pip
+install:
+  # Reducing verbosity is needed because of Travis' limit on log length
+  - pip install -e . --quiet
+script:
+  # run flake8 with exactly the same options as in the commit hook:
+  - config/hooks/pre-commit
+  # run tests and compute the coverage
+  - pytest --cov=image_classification_simulation
