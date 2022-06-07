@@ -24,6 +24,9 @@ setup(
         'sphinxcontrib-napoleon',
         'sphinxcontrib-katex',
         'recommonmark',
+        'protobuf==3.20.1',
+        'datasets==2.2.2',
+        'transformers==4.19.2',
         'torch==1.11.0', 'pytorch_lightning==1.2.7'],
     entry_points={
         'console_scripts': [
