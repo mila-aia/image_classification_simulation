@@ -18,6 +18,7 @@ setup(
         'pyyaml>=5.3',
         'pytest>=4.6',
         'pytest-cov',
+        'pillow>=7',
         'sphinx',
         'sphinx-autoapi',
         'sphinx-rtd-theme',
@@ -27,6 +28,7 @@ setup(
         'protobuf==3.20.1',
         'datasets==2.2.2',
         'transformers==4.19.2',
+        'torchvision>=0.5.0',
         'torch==1.11.0', 'pytorch_lightning==1.2.7'],
     entry_points={
         'console_scripts': [
