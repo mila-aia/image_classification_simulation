@@ -118,7 +118,7 @@ class OmniglotLoader(MyDataModule):  # pragma: no cover
 
     def val_dataloader(self) -> DataLoader:
         """Creates the validation dataloader using the validation data parser.
-        
+
         Returns
         -------
         DataLoader
@@ -135,7 +135,7 @@ class OmniglotLoader(MyDataModule):  # pragma: no cover
 
     def test_dataloader(self) -> DataLoader:
         """Creates the testing dataloader using the testing data parser.
-        
+
         Returns
         -------
         DataLoader
