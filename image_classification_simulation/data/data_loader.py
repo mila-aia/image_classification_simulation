@@ -6,7 +6,6 @@ import pytorch_lightning as pl
 from torch.utils.data import Dataset, DataLoader
 # __TODO__ change the dataloader to suit your needs...
 
-
 def get_data(
     data_folder: typing.AnyStr,
     prefix: typing.AnyStr
@@ -110,6 +109,7 @@ class MyDataModule(pl.LightningDataModule):  # pragma: no cover
         """Creates the testing dataloader using the testing data parser."""
         raise NotImplementedError  # __TODO__: add code to instantiate the test data loader here
 
+from image_classification_simulation.data.omniglot_loader import OmniglotLoader
 
 def load_data(data_dir, hyper_params):  # pragma: no cover
     """Prepare the data into datasets.
@@ -122,4 +122,7 @@ def load_data(data_dir, hyper_params):  # pragma: no cover
         datamodule (obj): the data module used to prepare/instantiate data loaders.
     """
     # __TODO__ if you have different data modules, add whatever code is needed to select them here
-    return MyDataModule(data_dir, hyper_params)
+    if hyper_params['data'] == 'Omniglot':
+        return OmniglotLoader(data_dir, hyper_params)
+    else:
+        return MyDataModule(data_dir, hyper_params)
