@@ -57,7 +57,9 @@ class Resnet(BaseModel):
         loss = self.loss_fn(logits, targets)
         return loss, logits
 
-    def compute_accuracy(self, logits: torch.tensor, targets: torch.tensor) -> int:
+    def compute_accuracy(
+        self, logits: torch.tensor, targets: torch.tensor
+    ) -> int:
         """Computes accuracy given the logits and target labels.
 
         Parameters
@@ -122,7 +124,9 @@ class Resnet(BaseModel):
         self.log("val_loss", loss)
         self.log("val_acc", val_acc)
 
-    def test_step(self, batch: torch.Tensor, batch_idx: torch.Tensor) -> torch.Tensor:
+    def test_step(
+        self, batch: torch.Tensor, batch_idx: torch.Tensor
+    ) -> torch.Tensor:
         """Runs a prediction step for testing, logging the loss.
 
         Parameters
@@ -173,8 +177,8 @@ if __name__ == "__main__":
     print(model)
     # generate a random image to test the module
     img = torch.rand((3, 3, 1024, 1024))
-    label = torch.randint(0,964,(3,))
+    label = torch.randint(0, 964, (3,))
     print(model(img).shape)
 
-    loss = model.training_step((img,label),None)
+    loss = model.training_step((img, label), None)
     print(loss)
