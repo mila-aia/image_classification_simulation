@@ -16,14 +16,14 @@ def load_optimizer(hyper_params, model):  # pragma: no cover
     Returns:
         optimizer (obj): The optimizer for the given model
     """
-    optimizer_name = hyper_params['optimizer']
+    optimizer_name = hyper_params["optimizer"]
     # __TODO__ fix optimizer list
-    if optimizer_name == 'adam':
+    if optimizer_name == "adam":
         optimizer = optim.Adam(model.parameters())
-    elif optimizer_name == 'sgd':
+    elif optimizer_name == "sgd":
         optimizer = optim.SGD(model.parameters())
     else:
-        raise ValueError('optimizer {} not supported'.format(optimizer_name))
+        raise ValueError("optimizer {} not supported".format(optimizer_name))
     return optimizer
 
 
@@ -43,11 +43,11 @@ def load_loss(hyper_params):  # pragma: no cover
     Returns:
         loss (obj): The loss for the given model
     """
-    loss_name = hyper_params['loss']
-    if loss_name == 'L1':
-        loss = torch.nn.L1Loss(reduction='sum')
-    if loss_name == 'CrossEntropyLoss':
-        loss = torch.nn.CrossEntropyLoss(reduction='sum')
+    loss_name = hyper_params["loss"]
+    if loss_name == "L1":
+        loss = torch.nn.L1Loss(reduction="sum")
+    if loss_name == "CrossEntropyLoss":
+        loss = torch.nn.CrossEntropyLoss(reduction="sum")
     else:
-        raise ValueError('loss {} not supported'.format(loss_name))
+        raise ValueError("loss {} not supported".format(loss_name))
     return loss

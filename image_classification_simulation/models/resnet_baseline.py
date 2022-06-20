@@ -172,5 +172,9 @@ if __name__ == "__main__":
     model = Resnet(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((1, 3, 1024, 1024))
+    img = torch.rand((3, 3, 1024, 1024))
+    label = torch.randint(0,964,(3,))
     print(model(img).shape)
+
+    loss = model.training_step((img,label),None)
+    print(loss)
