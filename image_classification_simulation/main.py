@@ -10,14 +10,15 @@ import orion
 import yaml
 from yaml import load
 from pytorch_lightning.loggers import MLFlowLogger
-from image_classification_simulation.data.data_loader import load_data
+from image_classification_simulation.data.utils import load_data
 from image_classification_simulation.train import STAT_FILE_NAME
 from image_classification_simulation.train import load_mlflow
 from image_classification_simulation.train import train
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.model_loader import load_model
 from image_classification_simulation.utils.file_utils import rsync_folder
-from image_classification_simulation.utils.logging_utils import LoggerWriter, log_exp_details
+from image_classification_simulation.utils.logging_utils import LoggerWriter
+from image_classification_simulation.utils.logging_utils import log_exp_details
 from image_classification_simulation.utils.reproducibility_utils import set_seed
 
 logger = logging.getLogger(__name__)
@@ -138,9 +139,13 @@ def run(args, data_dir, output_dir, hyper_params, mlf_logger):
     datamodule = load_data(data_dir, hyper_params)
     model = load_model(hyper_params)
 
-    train(model=model, datamodule=datamodule, output=output_dir, hyper_params=hyper_params,
-          use_progress_bar=not args.disable_progressbar, start_from_scratch=args.start_from_scratch,
-          mlf_logger=mlf_logger, gpus=args.gpus)
+    train(
+        model=model, datamodule=datamodule,
+        output=output_dir, hyper_params=hyper_params,
+        use_progress_bar=not args.disable_progressbar,
+        start_from_scratch=args.start_from_scratch,
+        mlf_logger=mlf_logger, gpus=args.gpus
+        )
 
 
 if __name__ == '__main__':
