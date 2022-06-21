@@ -1,0 +1,10 @@
+[flake8]
+ignore  =
+  ANN101, # annotation of self
+  ANN102, # annotation of cls
+  ANN401, # Any type
+  B006, # immutable data structure as argument default
+  B008, # function calls for argument default (for use with typer)
+  E203, # whitespace before :
+  W503  # line break before binary operator
+select  = ANN,B,B9,C,E,F,W

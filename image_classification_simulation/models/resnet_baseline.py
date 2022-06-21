@@ -28,7 +28,8 @@ class Resnet(BaseModel):
 
         self.loss_fn = load_loss(hyper_params)
         # load the feature extractor
-        self.feature_extractor = resnet18(pretrained=hyper_params["pretrained"])
+        self.feature_extractor = resnet18(
+            pretrained=hyper_params["pretrained"])
 
         self.flatten = nn.Flatten()
         self.linear1 = torch.nn.Linear(1000, hyper_params["size"])
@@ -67,7 +68,7 @@ class Resnet(BaseModel):
         logits : torch.tensor
             Scores produced by passing the input data to the model.
         targets : torch.tensor
-            True labels of the data points. 
+            True labels of the data points.
 
         Returns
         -------

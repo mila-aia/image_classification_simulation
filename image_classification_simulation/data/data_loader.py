@@ -41,7 +41,7 @@ class MyDataset(Dataset):  # pragma: no cover
 
 
 class MyDataModule(pl.LightningDataModule):  # pragma: no cover
-    """Data module class that prepares dataset 
+    """Data module class that prepares dataset
     parsers and instantiates data loaders."""
 
     def __init__(
@@ -61,8 +61,10 @@ class MyDataModule(pl.LightningDataModule):  # pragma: no cover
         pass
 
     def setup(self, stage=None):
-        """Parses and splits all samples across the train/valid/test parsers."""
-        # here, we will actually assign train/val datasets for use in dataloaders
+        """Parses and splits all samples \
+            across the train/valid/test parsers."""
+        # here, we will actually assign
+        # train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
             train_input, train_target = get_data(self.data_dir, "train")
             self.train_data_parser = MyDataset(train_input, train_target)
@@ -79,7 +81,8 @@ class MyDataModule(pl.LightningDataModule):  # pragma: no cover
         )
 
     def val_dataloader(self):
-        """Creates the validation dataloader using the validation data parser."""
+        """Creates the validation dataloader\
+             using the validation data parser."""
         return DataLoader(
             self.dev_data_parser, batch_size=self.batch_size, shuffle=False
         )
