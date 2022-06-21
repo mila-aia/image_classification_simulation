@@ -41,16 +41,16 @@ class MyDataset(Dataset):  # pragma: no cover
 
 
 class MyDataModule(pl.LightningDataModule):  # pragma: no cover
-    """Data module class that prepares dataset
-    parsers and instantiates data loaders."""
+    """Data module class that prepares dataset\
+        parsers and instantiates data loaders."""
 
     def __init__(
         self,
         data_dir: typing.AnyStr,
         hyper_params: typing.Dict[typing.AnyStr, typing.Any],
     ):
-        """Validates the hyperparameter config dictionary and
-         sets up internal attributes."""
+        """Validates the hyperparameter config dictionary and\
+            sets up internal attributes."""
         super().__init__()
         self.data_dir = data_dir
         self.batch_size = hyper_params["batch_size"]

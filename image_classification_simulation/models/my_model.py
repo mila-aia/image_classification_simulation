@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class BaseModel(pl.LightningModule):
-    """Base class for Pytorch Lightning model
-    - useful to reuse the same *_step methods."""
+    """Base class for Pytorch Lightning model useful to reuse\
+        the same *_step methods."""
 
     def configure_optimizers(self):
         """Returns the combination of optimizer(s)
