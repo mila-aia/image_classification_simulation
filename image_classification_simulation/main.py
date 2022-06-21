@@ -19,7 +19,7 @@ from image_classification_simulation.models.model_loader import load_model
 from image_classification_simulation.utils.file_utils import rsync_folder
 from image_classification_simulation.utils.logging_utils import LoggerWriter
 from image_classification_simulation.utils.logging_utils import log_exp_details
-from image_classification_simulation.utils.reproducibility_utils import set_seed  #noqa
+from image_classification_simulation.utils.reproducibility_utils import set_seed  # noqa
 
 logger = logging.getLogger(__name__)
 
