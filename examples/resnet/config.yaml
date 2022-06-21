@@ -7,7 +7,7 @@ architecture: resnet
 pretrained: True
 max_epoch: 99
 exp_name: resnet_test_exp
-data: Omniglot
+data: Office31
 # set to null to avoid setting a seed (can speed up GPU computation, but
 # results will not be reproducible)
 seed: 1234
