@@ -59,14 +59,13 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def setup(self, stage: str = None):
-
         """Parses and splits all samples across the train/valid/test parsers.
+
         Parameters
         ----------
         stage : string, optional
             Stage of training (training, validation, testing), by default None
         """
-
         # here, we will actually assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
@@ -88,8 +87,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             )
 
     def train_dataloader(self) -> DataLoader:
-
         """Creates the training dataloader using the training data parser.
+
         Returns
         -------
         DataLoader
@@ -105,8 +104,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def val_dataloader(self) -> DataLoader:
-
         """Creates the validation dataloader using the validation data parser.
+
         Returns
         -------
         DataLoader
@@ -122,8 +121,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def test_dataloader(self) -> DataLoader:
-        
         """Creates the testing dataloader using the testing data parser.
+
         Returns
         -------
         DataLoader
