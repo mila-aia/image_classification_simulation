@@ -1,6 +1,6 @@
 import typing
-from torchvision.datasets import Omniglot
 from torchvision import transforms
+from torchvision.datasets import Omniglot
 from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader
 

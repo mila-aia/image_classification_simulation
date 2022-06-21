@@ -1,12 +1,37 @@
-import typing
+import typing, os
 
 import numpy as np
 import pytorch_lightning as pl
 from torch.utils.data import Dataset, DataLoader
-from image_classification_simulation.data.utils import get_data
+# from image_classification_simulation.data.utils import get_data
 
 # __TODO__ change the dataloader to suit your needs...
 
+def get_data(
+    data_folder: typing.AnyStr,
+    prefix: typing.AnyStr
+) -> typing.Tuple[np.ndarray, np.ndarray]:  # pragma: no cover
+    """Function to load data into memory.
+
+    Args:
+        data_folder (str): Path of the folder where the data lives.
+        prefix (str): The data split to target, i.e. "train" or "dev.
+
+    Returns:
+        in_data (np.array): Input data.
+        tar_data (np.array): Target data.
+    """
+    inputs = []
+    with open(os.path.join(data_folder, '{}.input'.format(prefix))) as in_stream:
+        for line in in_stream:
+            inputs.append([float(x) for x in line.split()])
+    in_data = np.array(inputs, dtype=np.float32)
+    targets = []
+    with open(os.path.join(data_folder, '{}.target'.format(prefix))) as in_stream:
+        for line in in_stream:
+            targets.append(float(line))
+    tar_data = np.array(targets, dtype=np.float32)
+    return in_data, tar_data
 
 class MyDataset(Dataset):  # pragma: no cover
     """Dataset class for iterating over the data."""
