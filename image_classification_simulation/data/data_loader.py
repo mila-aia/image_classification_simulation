@@ -16,7 +16,7 @@ def get_data(
 
     Args:
         data_folder (str): Path of the folder where the data lives.
-        prefix (str): The data split to target, i.e. "train" or "dev.
+        prefix (str): The data split to target, ie "train" or "dev.
 
     Returns:
         in_data (np.array): Input data.

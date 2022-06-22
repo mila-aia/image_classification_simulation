@@ -7,7 +7,8 @@ from torch.utils.data import DataLoader, random_split
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
-    """Data module class that prepares dataset parsers and instantiates data loaders.
+    """Data module class that prepares dataset parsers and\
+         instantiates data loaders.
 
     Parameters
     ----------
@@ -17,13 +18,13 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     # We are going to use the amazon data
     # (most similar to a catalog of online products)
-
     def __init__(
         self,
         data_dir: typing.AnyStr,
         hyper_params: typing.Dict[typing.AnyStr, typing.Any],
     ):
-        """Validates the hyperparameter config dictionary and sets up internal attributes.
+        """Validates the hyperparameter config dictionary and\
+             sets up internal attributes.
 
         Parameters
         ----------
@@ -61,15 +62,16 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def setup(self, stage: str = None):
-
         """Parses and splits all samples across the train/valid/test parsers.
+
         Parameters
         ----------
         stage : string, optional
             Stage of training (training, validation, testing), by default None
         """
 
-        # here, we will actually assign train/val datasets for use in dataloaders
+        # here, we will actually assign train/val
+        # datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
             self.train_set = ImageFolder(
@@ -90,8 +92,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             )
 
     def train_dataloader(self) -> DataLoader:
-
         """Creates the training dataloader using the training data parser.
+
         Returns
         -------
         DataLoader
@@ -107,8 +109,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def val_dataloader(self) -> DataLoader:
-
         """Creates the validation dataloader using the validation data parser.
+
         Returns
         -------
         DataLoader
@@ -124,8 +126,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def test_dataloader(self) -> DataLoader:
-
         """Creates the testing dataloader using the testing data parser.
+
         Returns
         -------
         DataLoader
