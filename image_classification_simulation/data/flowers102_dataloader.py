@@ -12,12 +12,22 @@ from torch.utils.data import DataLoader
 
 
 class Flowers102DataLoader(MyDataModule):  # pragma: no cover
+    """Data module class that prepares dataset."""
+
     def __init__(
         self,
         data_dir: typing.AnyStr,
         hyper_params: typing.Dict[typing.AnyStr, typing.Any],
     ):
+        """initializes the dataloader
 
+        Parameters
+        ----------
+        data_dir : typing.AnyStr
+            directory that data resides.
+        hyper_params : typing.Dict[typing.AnyStr, typing.Any]
+            Hyperparameters
+        """
         super().__init__(data_dir, hyper_params)
         self.num_unique_labels = 102
 
