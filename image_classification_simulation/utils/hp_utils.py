@@ -17,7 +17,7 @@ def check_and_log_hp(
     hps : dict
         all hyper-parameters from the config file
     allow_extra : bool, optional
-        Can have more hyper-parameters than explicitly stated. The default is True.
+        Can have more hyper-parameters than explicitly stated.
     """
     check_hp(names, hps, allow_extra=allow_extra)
     log_hp(names, hps)
@@ -33,7 +33,7 @@ def check_hp(names: list, hps: dict, allow_extra: bool = True):
     hps : dict
         all hyper-parameters from the config file
     allow_extra : bool, optional
-        Can have more hyper-parameters than explicitly stated. The default is True.
+        Can have more hyper-parameters than explicitly stated.
 
     Raises
     ------

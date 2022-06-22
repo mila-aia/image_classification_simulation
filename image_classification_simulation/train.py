@@ -3,7 +3,6 @@ import glob
 import logging
 import os
 import shutil
-from git import Object
 import mlflow
 import orion
 import yaml
@@ -23,14 +22,18 @@ STAT_FILE_NAME = "stats.yaml"
 
 
 def train(**kwargs):  # pragma: no cover
-    """Training loop wrapper. Used to catch exception if Orion is being used."""
+    """Training loop wrapper.
+
+    Used to catch exception if Orion is being used.
+    """
     try:
         best_dev_metric = train_impl(**kwargs)
     except RuntimeError as err:
         if orion.client.cli.IS_ORION_ON and "CUDA out of memory" in str(err):
             logger.error(err)
             logger.error(
-                "model was out of memory - assigning a bad score to tell Orion to avoid"
+                "model was out of memory\
+                     - assigning a bad score to tell Orion to avoid"
                 "too big model"
             )
             best_dev_metric = -999
@@ -42,7 +45,7 @@ def train(**kwargs):  # pragma: no cover
             dict(
                 name="dev_metric",
                 type="objective",
-                # note the minus - cause orion is always trying to minimize (cit. from the guide)
+                # note the minus - cause orion is always trying to minimize (cit. from the guide) # noqa
                 value=-float(best_dev_metric),
             )
         ]
@@ -192,7 +195,8 @@ def handle_previous_models(
 
     if start_from_scratch:
         logger.info(
-            'will not load any pre-existent checkpoint (because of "--start-from-scratch")'
+            'will not load any pre-existent checkpoint\
+                 (because of "--start-from-scratch")'
         )
         resume_from_checkpoint = None
     elif len(last_models) >= 1:

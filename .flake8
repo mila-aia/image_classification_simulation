@@ -1,4 +1,5 @@
 [flake8]
+max-line-length = 79
 ignore  =
   ANN101, # annotation of self
   ANN102, # annotation of cls

@@ -1,4 +1,3 @@
-import argparse
 import logging
 import mlflow
 import os
@@ -82,7 +81,7 @@ def log_exp_details(script_location: str, args: object):  # pragma: no cover
     hostname = socket.gethostname()
     dependencies = freeze.freeze()
     details = (
-        "\nhostname: {}\ngit code hash: {}\ndata folder: {}\ndata folder (abs): {}\n\n"
+        "\nhostname: {}\ngit code hash: {}\ndata folder: {}\ndata folder (abs): {}\n\n" # noqa
         "dependencies:\n{}".format(
             hostname,
             git_hash,

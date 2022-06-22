@@ -4,7 +4,6 @@ import argparse
 import logging
 import os
 import sys
-from typing import Callable
 import mlflow
 import orion
 import yaml

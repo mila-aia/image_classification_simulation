@@ -65,7 +65,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         stage : string, optional
             Stage of training (training, validation, testing), by default None
         """
-        # here, we will actually assign train/val datasets for use in dataloaders
+        # here, we will actually assign
+        # train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
             self.train_set = ImageFolder(
