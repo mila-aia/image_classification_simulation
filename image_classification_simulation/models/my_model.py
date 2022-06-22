@@ -16,13 +16,12 @@ class BaseModel(pl.LightningModule):
         the same *_step methods."""
 
     def configure_optimizers(self):
-        """Returns the combination of optimizer(s)
+        """Returns the combination of optimizer(s)\
          and learning rate scheduler(s) to train with.
 
         Here, we read all the optimization-related
         hyperparameters from the config dictionary and
         create the required optimizer/scheduler combo.
-
         This function will be called automatically by
         the pytorch lightning trainer implementation.
         See
@@ -75,10 +74,12 @@ class MyModel(BaseModel):  # pragma: no cover
     """
 
     def __init__(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]):
-        """__init__.
+        """Initialize the model.
 
-        Args:
-            hyper_params (dict): hyper parameters from the config file.
+        Parameters
+        ----------
+        hyper_params : typing.Dict[typing.AnyStr, typing.Any]
+            A dictionary of hyperparameters
         """
         super(MyModel, self).__init__()
 
@@ -90,15 +91,18 @@ class MyModel(BaseModel):  # pragma: no cover
         # 'load_loss' could be part of the model itself...
         self.loss_fn = load_loss(hyper_params)
 
-    def forward(self, data):
+    def forward(self, data: torch.tensor) -> torch.tensor:
         """Forward method of the model.
 
-        Args:
-            data (tensor): The data to be passed to the model.
+        Parameters
+        ----------
+            data : torch.tensor
+                The data to be passed to the model.
 
-        Returns:
-            tensor: the output of the model computation.
-
+        Returns
+        -------
+        torch.tensor
+            The output of the model.
         """
         hidden = torch.nn.functional.relu(self.linear1(data))
         result = self.linear2(hidden)

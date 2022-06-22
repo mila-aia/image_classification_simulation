@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 import sys
-
+from typing import Callable
 import mlflow
 import orion
 import yaml
@@ -19,7 +19,9 @@ from image_classification_simulation.models.model_loader import load_model
 from image_classification_simulation.utils.file_utils import rsync_folder
 from image_classification_simulation.utils.logging_utils import LoggerWriter
 from image_classification_simulation.utils.logging_utils import log_exp_details
-from image_classification_simulation.utils.reproducibility_utils import set_seed  # noqa
+from image_classification_simulation.utils.reproducibility_utils import (
+    set_seed,
+)  # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -28,28 +30,31 @@ def main():
     """Main entry point of the program.
 
     Note:
+    ----
         This main.py file is meant to be called using the cli,
         see the `examples/local/run.sh` file to see how to use it.
-
     """
     parser = argparse.ArgumentParser()
     # __TODO__ check you need all the following CLI parameters
     parser.add_argument(
-        "--log", help="log to this file (in addition to stdout/err)")
+        "--log", help="log to this file (in addition to stdout/err)"
+    )
     parser.add_argument(
         "--config",
         help="config file with generic hyper-parameters,  such as optimizer, "
-        "batch_size, ... -  in yaml format",)
-    parser.add_argument(
-        "--data", help="path to data", required=True)
+        "batch_size, ... -  in yaml format",
+    )
+    parser.add_argument("--data", help="path to data", required=True)
     parser.add_argument(
         "--tmp-folder",
         help="will use this folder as working folder\
          - it will copy the input data here, generate results\
-        here, and then copy them back to the output folder",)
+        here, and then copy them back to the output folder",
+    )
     parser.add_argument(
-        "--output", help="path to outputs - will store files here",
-        required=True
+        "--output",
+        help="path to outputs - will store files here",
+        required=True,
     )
     parser.add_argument(
         "--disable-progressbar",
@@ -116,8 +121,8 @@ def main():
     mlflow.set_experiment(exp_name)
     save_dir = os.getenv("MLFLOW_TRACKING_URI", "./mlruns")
     mlf_logger = MLFlowLogger(
-        experiment_name=exp_name,
-        tags=tags, save_dir=save_dir)
+        experiment_name=exp_name, tags=tags, save_dir=save_dir
+    )
 
     if os.path.exists(os.path.join(args.output, STAT_FILE_NAME)):
         mlf_logger._run_id = load_mlflow(args.output)
@@ -130,15 +135,27 @@ def main():
         rsync_folder(output_dir + os.path.sep, args.output)
 
 
-def run(args, data_dir, output_dir, hyper_params, mlf_logger):
+def run(
+    args: argparse.Namespace,
+    data_dir: str,
+    output_dir: str,
+    hyper_params: dict,
+    mlf_logger: MLFlowLogger,
+):
     """Setup and run the dataloaders, training loops, etc.
 
-    Args:
-        args (object): arguments passed from the cli
-        data_dir (str): path to input folder
-        output_dir (str): path to output folder
-        hyper_params (dict): hyper parameters from the config file
-        mlf_logger (obj): MLFlow logger callback.
+    Parameters
+    ----------
+    args : argparse.Namespace
+        arguments passed from the cli
+    data_dir : str
+        path to input folder
+    output_dir : str
+        path to output folder
+    hyper_params : dict
+        hyper parameters from the config file
+    mlf_logger : MLFlowLogger
+        MLFlow logger callback.
     """
     # __TODO__ change the hparam that are used from the training algorithm
     # (and NOT the model - these will be specified in the model itself)

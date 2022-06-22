@@ -3,16 +3,20 @@ from image_classification_simulation.data.omniglot_loader import OmniglotLoader
 from image_classification_simulation.data.data_loader import MyDataModule
 
 
-def load_data(data_dir, hyper_params):  # pragma: no cover
+def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
     """Prepare the data into datasets.
 
-    Args:
-        data_dir (str): path to the folder containing the data
-        hyper_params (dict): hyper parameters from the config file
+    Parameters
+    ----------
+    data_dir : string
+        path to the folder containing the data
+    hyper_params : dictionary
+        hyper parameters from the config file
 
-    Returns:
-        datamodule (obj):
-        the data module used to prepare/instantiate data loaders.
+    Returns
+    -------
+    DataModule
+        Data module used to prepare/instantiate data loaders.
     """
     # __TODO__ if you have different data modules,
     #  add whatever code is needed to select them here

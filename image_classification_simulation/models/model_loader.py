@@ -7,14 +7,18 @@ from image_classification_simulation.models.resnet_baseline import Resnet
 logger = logging.getLogger(__name__)
 
 
-def load_model(hyper_params):  # pragma: no cover
+def load_model(hyper_params: dict):  # pragma: no cover
     """Instantiate a model.
 
-    Args:
-        hyper_params (dict): hyper parameters from the config file
+    Parameters
+    ----------
+    hyper_params : dict
+        hyper parameters from the config file
 
-    Returns:
-        model (obj): A neural network model object.
+    Returns
+    -------
+    model : object
+        the model to use
     """
     architecture = hyper_params["architecture"]
     # __TODO__ fix architecture list

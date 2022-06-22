@@ -19,7 +19,7 @@ class Flowers102DataLoader(MyDataModule):  # pragma: no cover
         data_dir: typing.AnyStr,
         hyper_params: typing.Dict[typing.AnyStr, typing.Any],
     ):
-        """initializes the dataloader
+        """Initializes the dataloader.
 
         Parameters
         ----------

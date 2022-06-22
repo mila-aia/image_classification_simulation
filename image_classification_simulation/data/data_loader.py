@@ -14,13 +14,18 @@ def get_data(
 ) -> typing.Tuple[np.ndarray, np.ndarray]:  # pragma: no cover
     """Function to load data into memory.
 
-    Args:
-        data_folder (str): Path of the folder where the data lives.
-        prefix (str): The data split to target, ie "train" or "dev.
+    Parameters
+    ----------
+    data_folder : typing.AnyStr
+        Path of the folder where the data lives.
+    prefix : typing.AnyStr
+        The data split to target, ie "train" or "dev".
 
-    Returns:
-        in_data (np.array): Input data.
-        tar_data (np.array): Target data.
+    Returns
+    -------
+    typing.Tuple[np.ndarray, np.ndarray]
+        in_data : Input data.
+        tar_data : Target data.
     """
     inputs = []
     with open(
@@ -47,11 +52,14 @@ class MyDataset(Dataset):  # pragma: no cover
         input_data: np.ndarray,
         target_data: np.ndarray,
     ):
-        """Initialize MyDataset.
+        """Dataset class for iterating over the data.
 
-        Args:
-            input_data (np.array): Input data.
-            target_data (np.array): Target data.
+        Parameters
+        ----------
+        input_data : np.ndarray
+            Input data.
+        target_data : np.ndarray
+            Target data.
         """
         self.input_data = input_data
         self.target_data = target_data
@@ -66,8 +74,10 @@ class MyDataset(Dataset):  # pragma: no cover
     ):
         """__getitem__.
 
-        Args:
-            index (int): Get index item from the dataset.
+        Parameters
+        ----------
+        index : int
+            Get index item from the dataset.
         """
         target_example = self.target_data[index]
         input_example = self.input_data[index]

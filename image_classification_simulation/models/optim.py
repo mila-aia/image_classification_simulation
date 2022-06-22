@@ -6,15 +6,20 @@ from torch import optim
 logger = logging.getLogger(__name__)
 
 
-def load_optimizer(hyper_params, model):  # pragma: no cover
+def load_optimizer(hyper_params: dict, model: object):  # pragma: no cover
     """Instantiate the optimizer.
 
-    Args:
-        hyper_params (dict): hyper parameters from the config file
-        model (obj): A neural network model object.
+    Parameters
+    ----------
+    hyper_params : dict
+        hyper parameters from the config file
+    model : object
+        the model to optimize
 
-    Returns:
-        optimizer (obj): The optimizer for the given model
+    Returns
+    -------
+    optimizer : object
+        the optimizer to use
     """
     optimizer_name = hyper_params["optimizer"]
     if "lr" in hyper_params:
@@ -31,7 +36,7 @@ def load_optimizer(hyper_params, model):  # pragma: no cover
     return optimizer
 
 
-def load_loss(hyper_params):  # pragma: no cover
+def load_loss(hyper_params: dict):  # pragma: no cover
     r"""Instantiate the loss.
 
     You can add some math directly in your docstrings,
@@ -42,11 +47,15 @@ def load_loss(hyper_params):  # pragma: no cover
     .. math::
         \text{loss}(x, y) = \frac{1}{n} \sum_{i} z_{i}
 
-    Args:
-        hyper_params (dict): hyper parameters from the config file
+    Parameters
+    ----------
+    hyper_params : dict
+        hyper parameters from the config file
 
-    Returns:
-        loss (obj): The loss for the given model
+    Returns
+    -------
+    loss : obj
+        The loss for the given model
     """
     loss_name = hyper_params["loss"]
     if loss_name == "L1":

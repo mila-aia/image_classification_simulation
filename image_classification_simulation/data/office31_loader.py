@@ -7,13 +7,9 @@ from torch.utils.data import DataLoader, random_split
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
-    """Data module class that prepares dataset parsers and\
-         instantiates data loaders.
+    """Data module class.
 
-    Parameters
-    ----------
-    MyDataModule : DataModule class
-        Template DataModule class
+    Prepares dataset parsers and instantiates data loaders.
     """
 
     # We are going to use the amazon data
@@ -69,9 +65,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         stage : string, optional
             Stage of training (training, validation, testing), by default None
         """
-
-        # here, we will actually assign train/val
-        # datasets for use in dataloaders
+        # here, we will actually assign train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
             self.train_set = ImageFolder(
