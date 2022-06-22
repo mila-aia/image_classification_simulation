@@ -5,12 +5,15 @@ from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader
 
 
-# NB: background=True selects the train set, background=False selects the test set
-# It's the nomenclature from the original paper, we just have to deal with it
+# NB: background=True selects the train set,
+# background=False selects the test set
+# It's the nomenclature from the original paper,
+# we just have to deal with it
 
 
 class OmniglotLoader(MyDataModule):  # pragma: no cover
-    """Data module class that prepares dataset parsers and instantiates data loaders.
+    """Data module class that prepares dataset\
+        parsers and instantiates data loaders.
 
     Parameters
     ----------
@@ -23,7 +26,8 @@ class OmniglotLoader(MyDataModule):  # pragma: no cover
         data_dir: typing.AnyStr,
         hyper_params: typing.Dict[typing.AnyStr, typing.Any],
     ):
-        """Validates the hyperparameter config dictionary and sets up internal attributes.
+        """Validates the hyperparameter config dictionary and\
+             sets up internal attributes.
 
         Parameters
         ----------
@@ -34,7 +38,7 @@ class OmniglotLoader(MyDataModule):  # pragma: no cover
         """
         super().__init__(data_dir, hyper_params)
         self.num_unique_labels = 964
-
+        hyper_params["num_classes"] = self.num_unique_labels
         if "num_workers" in hyper_params:
             self.num_workers = hyper_params["num_workers"]
         else:
@@ -77,7 +81,8 @@ class OmniglotLoader(MyDataModule):  # pragma: no cover
         stage : string, optional
             Stage of training (training, validation, testing), by default None
         """
-        # here, we will actually assign train/val datasets for use in dataloaders
+        # here, we will actually assign train/val
+        #  datasets for use in dataloaders
         if stage == "fit" or stage is None:
             self.train_set = Omniglot(
                 root=self.data_dir,

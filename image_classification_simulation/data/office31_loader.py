@@ -15,7 +15,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         Template DataModule class
     """
 
-    # We are going to use the amazon data (most similar to a catalog of online products)
+    # We are going to use the amazon data
+    # (most similar to a catalog of online products)
 
     def __init__(
         self,
@@ -33,6 +34,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         """
         super().__init__(data_dir, hyper_params)
         self.num_unique_labels = 31
+        hyper_params["num_classes"] = self.num_unique_labels
 
         if "num_workers" in hyper_params:
             self.num_workers = hyper_params["num_workers"]
@@ -122,7 +124,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
     def test_dataloader(self) -> DataLoader:
-        
+
         """Creates the testing dataloader using the testing data parser.
         Returns
         -------
@@ -138,13 +140,12 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             collate_fn=None,
         )
 
-import matplotlib as plt
+
+# import matplotlib as plt
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8, "image_size": 200}
-    office31_loader = Office31Loader(
-        "./examples/data/domain_adaptation_images/amazon/", args
-    )
+    office31_loader = Office31Loader("../../examples/data/amazon", args)
     office31_loader.setup(stage="fit")
     # i = iter(office31_loader.train_set.dataset)
     # img, label = next(i)
