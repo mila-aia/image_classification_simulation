@@ -16,17 +16,17 @@ def load_model(hyper_params):  # pragma: no cover
     Returns:
         model (obj): A neural network model object.
     """
-    architecture = hyper_params['architecture']
+    architecture = hyper_params["architecture"]
     # __TODO__ fix architecture list
-    if architecture == 'my_model':
+    if architecture == "my_model":
         model_class = MyModel
-    elif architecture == 'resnet':
+    elif architecture == "resnet":
         model_class = Resnet
     else:
-        raise ValueError('architecture {} not supported'.format(architecture))
-    logger.info('selected architecture: {}'.format(architecture))
+        raise ValueError("architecture {} not supported".format(architecture))
+    logger.info("selected architecture: {}".format(architecture))
 
     model = model_class(hyper_params)
-    logger.info('model info:\n' + str(model) + '\n')
+    logger.info("model info:\n" + str(model) + "\n")
 
     return model

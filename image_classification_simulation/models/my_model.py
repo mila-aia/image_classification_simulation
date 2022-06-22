@@ -35,9 +35,9 @@ class BaseModel(pl.LightningModule):
         return load_optimizer(self.hparams, self)
 
     def _generic_step(
-            self,
-            batch: typing.Any,
-            batch_idx: int,
+        self,
+        batch: typing.Any,
+        batch_idx: int,
     ) -> typing.Any:
         """Runs the prediction + evaluation\
         step for training/validation/testing."""
@@ -82,12 +82,11 @@ class MyModel(BaseModel):  # pragma: no cover
         """
         super(MyModel, self).__init__()
 
-        check_and_log_hp(['size'], hyper_params)
+        check_and_log_hp(["size"], hyper_params)
         # they will become available via model.hparams
         self.save_hyperparameters(hyper_params)
-        self.linear1 = torch.nn.Linear(5, hyper_params['size'])
-        self.linear2 = torch.nn.Linear(
-            hyper_params['size'], 1)
+        self.linear1 = torch.nn.Linear(5, hyper_params["size"])
+        self.linear2 = torch.nn.Linear(hyper_params["size"], 1)
         # 'load_loss' could be part of the model itself...
         self.loss_fn = load_loss(hyper_params)
 

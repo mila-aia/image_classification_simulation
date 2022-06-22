@@ -5,12 +5,13 @@ from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader
 
 
-# NB: background=True selects the train set, background=False selects the test set
-# It's the nomenclature from the original paper, we just have to deal with it
+# NB: background=True selects the train set,
+# background=False selects the test set
+# It's the nomenclature from the original paper,
+# we just have to deal with it
 
 
 class Flowers102DataLoader(MyDataModule):  # pragma: no cover
-
     def __init__(
         self,
         data_dir: typing.AnyStr,
@@ -52,30 +53,31 @@ class Flowers102DataLoader(MyDataModule):  # pragma: no cover
         stage : string, optional
             Stage of training (training, validation, testing), by default None
         """
-        # here, we will actually assign train/val datasets for use in dataloaders
+        # here, we will actually assign train/val
+        # datasets for use in dataloaders
         if stage == "fit" or stage is None:
             self.train_set = Flowers102(
                 root=self.data_dir,
-                split = 'train',
-                transform= None,
-                target_transform = None,
-                download = True
-              )
+                split="train",
+                transform=None,
+                target_transform=None,
+                download=True,
+            )
             self.val_set = Flowers102(
                 root=self.data_dir,
-                split = 'val',
-                transform= None,
-                target_transform = None,
-                download = True
-              )
+                split="val",
+                transform=None,
+                target_transform=None,
+                download=True,
+            )
         if stage == "test" or stage is None:
-                self.test_set = Flowers102(
+            self.test_set = Flowers102(
                 root=self.data_dir,
-                split = 'test',
-                transform= None,
-                target_transform = None,
-                download = True
-              )
+                split="test",
+                transform=None,
+                target_transform=None,
+                download=True,
+            )
 
     def train_dataloader(self) -> DataLoader:
         """Creates the training dataloader using the training data parser.

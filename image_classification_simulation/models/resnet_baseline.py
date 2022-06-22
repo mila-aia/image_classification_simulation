@@ -28,7 +28,9 @@ class Resnet(BaseModel):
 
         self.loss_fn = load_loss(hyper_params)
         # load the feature extractor
-        self.feature_extractor = resnet18(pretrained=hyper_params["pretrained"])
+        self.feature_extractor = resnet18(
+            pretrained=hyper_params["pretrained"]
+        )
 
         self.flatten = nn.Flatten()
         self.linear1 = torch.nn.Linear(1000, hyper_params["size"])
@@ -57,7 +59,9 @@ class Resnet(BaseModel):
         loss = self.loss_fn(logits, targets)
         return loss, logits
 
-    def compute_accuracy(self, logits: torch.tensor, targets: torch.tensor) -> int:
+    def compute_accuracy(
+        self, logits: torch.tensor, targets: torch.tensor
+    ) -> int:
         """Computes accuracy given the logits and target labels.
 
         Parameters
@@ -122,7 +126,9 @@ class Resnet(BaseModel):
         self.log("val_loss", loss)
         self.log("val_acc", val_acc)
 
-    def test_step(self, batch: torch.Tensor, batch_idx: torch.Tensor) -> torch.Tensor:
+    def test_step(
+        self, batch: torch.Tensor, batch_idx: torch.Tensor
+    ) -> torch.Tensor:
         """Runs a prediction step for testing, logging the loss.
 
         Parameters
