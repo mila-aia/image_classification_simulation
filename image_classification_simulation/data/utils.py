@@ -20,6 +20,9 @@ def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
     """
     # __TODO__ if you have different data modules,
     #  add whatever code is needed to select them here
+    if "data" not in hyper_params:
+        return MyDataModule(data_dir, hyper_params)
+
     if hyper_params["data"] == "Omniglot":
         return OmniglotLoader(data_dir, hyper_params)
     elif hyper_params["data"] == "Office31":
@@ -31,7 +34,7 @@ def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
 if __name__ == "__main__":
     data_dir = "./data"
     hyper_params = {
-        "data": "Office31",
+        "data": "Omniglot",
         "batch_size": 32,
         "epochs": 10,
         "seed": None,

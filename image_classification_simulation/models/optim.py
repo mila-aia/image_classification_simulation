@@ -60,7 +60,7 @@ def load_loss(hyper_params: dict):  # pragma: no cover
     loss_name = hyper_params["loss"]
     if loss_name == "L1":
         loss = torch.nn.L1Loss(reduction="sum")
-    if loss_name == "CrossEntropyLoss":
+    elif loss_name == "CrossEntropyLoss":
         loss = torch.nn.CrossEntropyLoss(reduction="sum")
     else:
         raise ValueError("loss {} not supported".format(loss_name))
