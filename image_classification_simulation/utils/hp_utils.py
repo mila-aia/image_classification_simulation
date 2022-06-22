@@ -5,25 +5,40 @@ from mlflow import log_param
 logger = logging.getLogger(__name__)
 
 
-def check_and_log_hp(names, hps, allow_extra=True):  # pragma: no cover
+def check_and_log_hp(
+    names: list, hps: dict, allow_extra: bool = True
+):  # pragma: no cover
     """Check and log hyper-parameters.
 
-    Args:
-        names (list): names of all expected hyper parameters
-        hps (dict): all hyper-parameters from the config file
-        allow_extra (bool): Can have more hyper-parameters than explicitly stated
+    Parameters
+    ----------
+    names : list
+        names of all expected hyper parameters
+    hps : dict
+        all hyper-parameters from the config file
+    allow_extra : bool, optional
+        Can have more hyper-parameters than explicitly stated.
     """
     check_hp(names, hps, allow_extra=allow_extra)
     log_hp(names, hps)
 
 
-def check_hp(names, hps, allow_extra=True):
+def check_hp(names: list, hps: dict, allow_extra: bool = True):
     """Check if required hyper-parameters are all present.
 
-    Args:
-        names (list): names of all expected hyper parameters
-        hps (dict): all hyper-parameters from the config file
-        allow_extra (bool): Can have more hyper-parameters than explicitly stated
+    Parameters
+    ----------
+    names : list
+        names of all expected hyper parameters
+    hps : dict
+        all hyper-parameters from the config file
+    allow_extra : bool, optional
+        Can have more hyper-parameters than explicitly stated.
+
+    Raises
+    ------
+    ValueError
+        If a hyper-parameter is missing.
     """
     missing = set()
     for name in names:
@@ -33,21 +48,24 @@ def check_hp(names, hps, allow_extra=True):
 
     msgs = []
     if len(missing) > 0:
-        msgs.append(f'please add the missing hyper-parameters: {missing}')
+        msgs.append(f"please add the missing hyper-parameters: {missing}")
     if len(extra) > 0 and not allow_extra:
-        msgs.append(f'please remove the extra hyper-parameters: {extra}')
+        msgs.append(f"please remove the extra hyper-parameters: {extra}")
     if len(msgs) > 0:
-        raise ValueError('\n'.join(msgs))
+        raise ValueError("\n".join(msgs))
 
 
-def log_hp(names, hps):  # pragma: no cover
+def log_hp(names: list, hps: dict):  # pragma: no cover
     """Log the hyper-parameters.
 
-    Args:
-        names (list): list with names of hyper parameters to log
-        hps (dict): all hyper-parameters from the config file
+    Parameters
+    ----------
+    names : list
+        names of all expected hyper parameters
+    hps : dict
+        all hyper-parameters from the config file
     """
     for name in sorted(names):
         log_param(name, hps[name])
         logger.info('\thp "{}" => "{}"'.format(name, hps[name]))
-    logger.info('\n')
+    logger.info("\n")
