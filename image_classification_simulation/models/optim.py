@@ -17,11 +17,15 @@ def load_optimizer(hyper_params, model):  # pragma: no cover
         optimizer (obj): The optimizer for the given model
     """
     optimizer_name = hyper_params["optimizer"]
+    if "lr" in hyper_params:
+        lr = hyper_params["lr"]
+    else:
+        lr = 0.001
     # __TODO__ fix optimizer list
     if optimizer_name == "adam":
-        optimizer = optim.Adam(model.parameters())
+        optimizer = optim.Adam(model.parameters(), lr)
     elif optimizer_name == "sgd":
-        optimizer = optim.SGD(model.parameters())
+        optimizer = optim.SGD(model.parameters(), lr)
     else:
         raise ValueError("optimizer {} not supported".format(optimizer_name))
     return optimizer
