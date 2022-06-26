@@ -48,18 +48,12 @@ class MNISTLoader(MyDataModule):  # pragma: no cover
             print("image size set to:", self.image_size)
 
         self.train_set_transformation = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.1307,), (0.3081,))
-            ]
+            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
         )
 
         self.test_set_transformation = transforms.Compose(
-            [
-                transforms.ToTensor(),
-                transforms.Normalize((0.1307,), (0.3081,))
-            ]
-        )                                                    
+            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+        )
 
     def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
@@ -76,20 +70,20 @@ class MNISTLoader(MyDataModule):  # pragma: no cover
                 root=self.data_dir,
                 download=True,
                 train=True,
-                transform=self.train_set_transformation
+                transform=self.train_set_transformation,
             )
             self.val_set = MNIST(
                 root=self.data_dir,
                 download=True,
                 train=True,
-                transform=self.train_set_transformation
+                transform=self.train_set_transformation,
             )
         if stage == "test" or stage is None:
             self.test_set = MNIST(
                 root=self.data_dir,
                 download=True,
                 train=False,
-                transform=self.test_set_transformation
+                transform=self.test_set_transformation,
             )
 
     def train_dataloader(self) -> DataLoader:
@@ -143,11 +137,11 @@ class MNISTLoader(MyDataModule):  # pragma: no cover
             collate_fn=None,
         )
 
+
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 32, "image_size": 28}
     mnist_loader = MNISTLoader("./examples/data/", args)
     mnist_loader.setup(stage="fit")
-    train_dl=mnist_loader.train_dataloader()
-    val_dl=mnist_loader.val_dataloader()
-
+    train_dl = mnist_loader.train_dataloader()
+    val_dl = mnist_loader.val_dataloader()
