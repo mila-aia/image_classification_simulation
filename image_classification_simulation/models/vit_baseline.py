@@ -1,13 +1,13 @@
 import torch
 import typing
 from torch import nn
-from torchvision.models import resnet18
+from transformers import ViTFeatureExtractor
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
 
 
-class Resnet(BaseModel):
+class ViT(BaseModel):
     """Holds the ResNet model and a hidden layer."""
 
     def __init__(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]):
@@ -19,7 +19,7 @@ class Resnet(BaseModel):
         hyper_params : typing.Dict[typing.AnyStr, typing.Any]
             A dictionary of hyperparameters
         """
-        super(Resnet, self).__init__()
+        super(ViT, self).__init__()
         check_and_log_hp(["size"], hyper_params)
 
         self.save_hyperparameters(
@@ -28,8 +28,8 @@ class Resnet(BaseModel):
 
         self.loss_fn = load_loss(hyper_params)
         # load the feature extractor
-        self.feature_extractor = resnet18(
-            pretrained=hyper_params["pretrained"]
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained(
+            "google/vit-base-patch16-224-in21k"
         )
 
         self.flatten = nn.Flatten()
@@ -175,7 +175,7 @@ class Resnet(BaseModel):
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     hparams = {"size": 964, "loss": "CrossEntropyLoss", "pretrained": True}
-    model = Resnet(hparams).to(device)
+    model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
     img = torch.rand((3, 3, 1024, 1024))
