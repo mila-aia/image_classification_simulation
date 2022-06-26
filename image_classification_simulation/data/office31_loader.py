@@ -48,13 +48,16 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         self.train_set_transformation = transforms.Compose(
             [
                 transforms.RandomHorizontalFlip(),
-                transforms.Resize((200, 200)),
+                transforms.Resize((self.image_size, self.image_size)),
                 transforms.ToTensor(),
             ]
         )
 
         self.test_set_transformation = transforms.Compose(
-            [transforms.Resize((200, 200)), transforms.ToTensor()]
+            [
+                transforms.Resize((self.image_size, self.image_size)),
+                transforms.ToTensor(),
+            ]
         )
 
     def setup(self, stage: str = None):
