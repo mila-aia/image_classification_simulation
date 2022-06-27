@@ -1,0 +1,20 @@
+# general
+batch_size: 16
+optimizer: adam
+loss: CrossEntropyLoss
+patience: 5
+architecture: classic_cnn
+pretrained: True
+max_epoch: 99
+exp_name: cnn_test_exp
+# dataset
+data: Office31
+img_size: 100
+size: 31
+num_channels: 3
+# set to null to avoid setting a seed (can speed up GPU computation, but
+# results will not be reproducible)
+seed: 1234
+# architecture
+num_filters: 8
+
