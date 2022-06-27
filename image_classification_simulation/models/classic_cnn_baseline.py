@@ -1,5 +1,6 @@
 import torch
 import typing
+import numpy as np
 from torch import nn
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
@@ -27,12 +28,87 @@ class ClassicCNN(BaseModel):
 
         self.loss_fn = load_loss(hyper_params)
 
+        if "num_filters" in hyper_params:
+            self.num_filters = hyper_params["num_filters"]
+        else:
+            self.num_filters = 8
+
+        # defining network layers
         self.flatten = nn.Flatten()
-        self.linear1 = torch.nn.Linear(1000, hyper_params["size"])
-        self.linear2 = torch.nn.Linear(
-            hyper_params["size"], hyper_params["num_classes"]
-        )  # 964: number of classes in Omniglot
-        self.activation = torch.nn.ReLU()
+        self.activation = nn.ReLU()
+        self.maxpooling = nn.MaxPool2d(2, 2)
+
+        self.conv1 = nn.Conv2d(
+            hyper_params["num_channels"],
+            self.num_filters,
+            kernel_size=3,
+            padding=1,
+        )
+        self.conv2 = nn.Conv2d(
+            self.num_filters,
+            self.num_filters * 2,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv3 = nn.Conv2d(
+            self.num_filters * 2,
+            self.num_filters * 4,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv4 = nn.Conv2d(
+            self.num_filters * 4,
+            self.num_filters * 4,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv5 = nn.Conv2d(
+            self.num_filters * 4,
+            self.num_filters * 8,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+        self.conv6 = nn.Conv2d(
+            self.num_filters * 8,
+            self.num_filters * 8,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+
+        def get_output_shape(model, image_dim):
+            return model(torch.rand(*(image_dim))).data.shape
+
+        # Calculate the input size after the flatten layer
+        self.expected_input_shape = (
+            1,
+            hyper_params["num_channels"],
+            hyper_params["img_size"],
+            hyper_params["img_size"],
+        )
+
+        conv1_out = get_output_shape(self.conv1, self.expected_input_shape)
+        conv2_out = get_output_shape(
+            self.maxpooling, get_output_shape(self.conv2, conv1_out)
+        )
+        conv3_out = get_output_shape(self.conv3, conv2_out)
+        conv4_out = get_output_shape(
+            self.maxpooling, get_output_shape(self.conv4, conv3_out)
+        )
+        conv5_out = get_output_shape(self.conv5, conv4_out)
+        conv6_out = get_output_shape(
+            self.maxpooling, get_output_shape(self.conv6, conv5_out)
+        )
+
+        fc_size = np.prod(list(conv6_out))
+
+        self.linear1 = nn.Linear(fc_size, 256)
+        self.linear2 = nn.Linear(256, 128)
+        self.linear3 = nn.Linear(128, hyper_params["size"])
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -157,12 +233,36 @@ class ClassicCNN(BaseModel):
         torch.Tensor
             Logit scores
         """
-        # Extract the features of support and query images
-        z_x = self.feature_extractor.forward(batch_images)
+        print(batch_images.shape)
+
+        # Block 1
+        z_x = self.conv1(batch_images)
+        z_x = self.activation(z_x)
+        z_x = self.conv2(z_x)
+        z_x = self.activation(z_x)
+        z_x = self.maxpooling(z_x)
+
+        # Block 2
+        z_x = self.conv3(z_x)
+        z_x = self.activation(z_x)
+        z_x = self.conv4(z_x)
+        z_x = self.activation(z_x)
+        z_x = self.maxpooling(z_x)
+
+        # Block 3
+        z_x = self.conv5(z_x)
+        z_x = self.activation(z_x)
+        z_x = self.conv6(z_x)
+        z_x = self.activation(z_x)
+        z_x = self.maxpooling(z_x)
+
+        # Fully connected block
         z_x = self.flatten(z_x)
         z_x = self.linear1(z_x)
         z_x = self.activation(z_x)
-        logits = self.linear2(z_x)
+        z_x = self.linear2(z_x)
+        z_x = self.activation(z_x)
+        logits = self.linear3(z_x)
 
         return logits
 
