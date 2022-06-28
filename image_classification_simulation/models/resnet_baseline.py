@@ -83,7 +83,7 @@ class Resnet(BaseModel):
         int
             The accuracy score.
         """
-        probs = nn.functional.softmax(logits, 0)
+        probs = nn.functional.softmax(logits, 1)
         preds = torch.argmax(probs, 1)
         return (preds == targets).sum() / len(targets)
 
