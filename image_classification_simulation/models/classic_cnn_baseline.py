@@ -233,7 +233,7 @@ class ClassicCNN(BaseModel):
         torch.Tensor
             Logit scores
         """
-        print(batch_images.shape)
+        # print(batch_images.shape)
 
         # Block 1
         z_x = self.conv1(batch_images)
@@ -269,12 +269,12 @@ class ClassicCNN(BaseModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"size": 964, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {"size": 10, "loss": "CrossEntropyLoss", "pretrained": True}
     model = ClassicCNN(hparams).to(device)
     print(model)
     # generate a random image to test the module
     img = torch.rand((3, 3, 1024, 1024))
-    label = torch.randint(0, 964, (3,))
+    label = torch.randint(0, 10, (3,))
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
