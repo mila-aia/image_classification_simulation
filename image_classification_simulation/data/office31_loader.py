@@ -4,6 +4,7 @@ import numpy as np
 from torchvision.datasets import ImageFolder
 from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader, random_split
+from easyfsl.samplers import TaskSampler
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
@@ -44,7 +45,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         else:
             self.image_size = 200
             print("image size set to:", self.image_size)
-    
+
         self.train_set_transformation = transforms.Compose(
             [
                 transforms.RandomResizedCrop(300),
@@ -64,7 +65,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             ]
         )
 
-    def setup(self, stage: str = None):
+    def setup(self, stage: str = None, valid_size: float = 0.1):
         """Parses and splits all samples across the train/valid/test parsers.
 
         Parameters
@@ -80,7 +81,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
                 root=self.data_dir, transform=self.train_set_transformation
             )
 
-            n_val = int(np.floor(0.1 * len(self.train_set)))
+            n_val = int(np.floor(valid_size * len(self.train_set)))
             n_train = len(self.train_set) - n_val
 
             self.train_set, self.val_set = random_split(
@@ -92,6 +93,78 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.test_set = ImageFolder(
                 root=self.data_dir, transform=self.test_set_transformation
             )
+
+    def setup_val_sampler(self):
+        N_WAY = 15  # Number of classes in a task
+        N_SHOT = 10  # Number of images per class in the support set
+        N_QUERY = 10  # Number of images per class in the query set
+        N_EVALUATION_TASKS = 100
+
+        # The sampler needs a dataset with a "get_labels" method.
+        # Check the code if you have any doubt!
+        self.val_set.get_labels = lambda: [
+            instance[1] for instance in self.val_set
+        ]
+        val_sampler = TaskSampler(
+            self.val_set,
+            n_way=N_WAY,
+            n_shot=N_SHOT,
+            n_query=N_QUERY,
+            n_tasks=N_EVALUATION_TASKS,
+        )
+        return val_sampler
+
+    def setup_train_sampler(self):
+        N_WAY = 15  # Number of classes in a task
+        N_SHOT = 10  # Number of images per class in the support set
+        N_QUERY = 10  # Number of images per class in the query set
+        N_TRAINING_EPISODES = 400
+
+        self.train_set.get_labels = lambda: [
+            instance[1] for instance in self.train_set
+        ]
+        train_sampler = TaskSampler(
+            self.train_set,
+            n_way=N_WAY,
+            n_shot=N_SHOT,
+            n_query=N_QUERY,
+            n_tasks=N_TRAINING_EPISODES,
+        )
+        return train_sampler
+
+    def train_fewshot_loader(self) -> DataLoader:
+        """Creates the training dataloader using the training data parser.
+
+        Returns
+        -------
+        DataLoader
+            returns a pytorch DataLoader class
+        """
+        train_sampler = self.setup_train_sampler()
+        return DataLoader(
+            self.train_set,
+            batch_sampler=train_sampler,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            collate_fn=train_sampler.episodic_collate_fn,
+        )
+
+    def val_fewshot_loader(self) -> DataLoader:
+        """Creates the training dataloader using the training data parser.
+
+        Returns
+        -------
+        DataLoader
+            returns a pytorch DataLoader class
+        """
+        val_sampler = self.setup_val_sampler()
+        return DataLoader(
+            self.val_set,
+            batch_sampler=val_sampler,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            collate_fn=val_sampler.episodic_collate_fn,
+        )
 
     def train_dataloader(self) -> DataLoader:
         """Creates the training dataloader using the training data parser.
@@ -149,7 +222,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8, "image_size": 200}
-    office31_loader = Office31Loader("../../examples/data/amazon", args)
+    office31_loader = Office31Loader("./examples/data/amazon/images", args)
     office31_loader.setup(stage="fit")
     # i = iter(office31_loader.train_set.dataset)
     # img, label = next(i)
