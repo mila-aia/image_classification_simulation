@@ -1,6 +1,9 @@
 import typing
 from torchvision import transforms
+import torch
 import numpy as np
+from datasets import load_dataset
+from transformers import ViTFeatureExtractor
 from torchvision.datasets import ImageFolder
 from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader, random_split
@@ -45,20 +48,75 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.image_size = 200
             print("image size set to:", self.image_size)
 
-        self.train_set_transformation = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.Resize((self.image_size, self.image_size)),
-                transforms.ToTensor(),
-            ]
-        )
+        if "model" in hyper_params:
+            self.model_type = hyper_params["model"]
 
-        self.test_set_transformation = transforms.Compose(
-            [
-                transforms.Resize((self.image_size, self.image_size)),
-                transforms.ToTensor(),
-            ]
-        )
+        if "train_test_split" in hyper_params:
+            self.train_test_split = hyper_params["train_test_split"]
+        else:
+            self.train_test_split = 0.15
+
+        if hasattr(self, "model_type"):
+            if self.model_type == "vit":
+
+                feature_extractor = ViTFeatureExtractor.from_pretrained(
+                    "google/vit-base-patch16-224-in21k"
+                )
+
+                self.train_set_transformation = transforms.Compose(
+                    [
+                        transforms.RandomResizedCrop(feature_extractor.size),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            mean=feature_extractor.image_mean,
+                            std=feature_extractor.image_std,
+                        ),
+                    ]
+                )
+
+                self.test_set_transformation = transforms.Compose(
+                    [
+                        transforms.Resize(feature_extractor.size),
+                        transforms.CenterCrop(feature_extractor.size),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            mean=feature_extractor.image_mean,
+                            std=feature_extractor.image_std,
+                        ),
+                    ]
+                )
+
+        else:
+
+            self.train_set_transformation = transforms.Compose(
+                [
+                    transforms.RandomHorizontalFlip(),
+                    transforms.Resize((self.image_size, self.image_size)),
+                    transforms.ToTensor(),
+                ]
+            )
+
+            self.test_set_transformation = transforms.Compose(
+                [
+                    transforms.Resize((self.image_size, self.image_size)),
+                    transforms.ToTensor(),
+                ]
+            )
+
+    def _vit_train_transforms(self, examples):
+        examples["pixel_values"] = [
+            self.train_set_transformation(image.convert("RGB"))
+            for image in examples["image"]
+        ]
+        return examples
+
+    def _vit_val_transforms(self, examples):
+        examples["pixel_values"] = [
+            self.train_set_transformation(image.convert("RGB"))
+            for image in examples["image"]
+        ]
+        return examples
 
     def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
@@ -72,22 +130,55 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         # train/val datasets for use in dataloaders
         if stage == "fit" or stage is None:
 
-            self.train_set = ImageFolder(
-                root=self.data_dir, transform=self.train_set_transformation
-            )
+            if hasattr(self, "model_type"):
+                if self.model_type == "vit":
 
-            n_val = int(np.floor(0.1 * len(self.train_set)))
-            n_train = len(self.train_set) - n_val
+                    dataset = load_dataset(
+                        "imagefolder", data_dir=self.data_dir, split="train"
+                    )
+                    splits = dataset.train_test_split(
+                        test_size=self.train_test_split
+                    )
+                    train_dataset = splits["train"]
+                    val_dataset = splits["test"]
 
-            self.train_set, self.val_set = random_split(
-                self.train_set, [n_train, n_val]
-            )
+                    train_dataset.set_transform(self._vit_train_transforms)
+                    val_dataset.set_transform(self._vit_val_transforms)
+
+            else:
+
+                self.train_set = ImageFolder(
+                    root=self.data_dir, transform=self.train_set_transformation
+                )
+
+                n_val = int(
+                    np.floor(self.train_test_split * len(self.train_set))
+                )
+                n_train = len(self.train_set) - n_val
+
+                self.train_set, self.val_set = random_split(
+                    self.train_set, [n_train, n_val]
+                )
 
         if stage == "test" or stage is None:
 
             self.test_set = ImageFolder(
                 root=self.data_dir, transform=self.test_set_transformation
             )
+
+    def collate_fn(examples):
+        """Creates a collate function for the vit pipeline.
+
+        Returns
+        -------
+        DataLoader
+            returns a pytorch DataLoader class
+        """
+        pixel_values = torch.stack(
+            [example["pixel_values"] for example in examples]
+        )
+        labels = torch.tensor([example["label"] for example in examples])
+        return {"pixel_values": pixel_values, "labels": labels}
 
     def train_dataloader(self) -> DataLoader:
         """Creates the training dataloader using the training data parser.
@@ -97,14 +188,28 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         DataLoader
             returns a pytorch DataLoader class
         """
-        return DataLoader(
-            self.train_set,
-            batch_size=self.batch_size,
-            batch_sampler=None,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            collate_fn=None,
-        )
+        if hasattr(self, "model_type"):
+            if self.model_type == "vit":
+
+                return DataLoader(
+                    self.train_set,
+                    batch_size=self.batch_size,
+                    batch_sampler=None,
+                    num_workers=self.num_workers,
+                    pin_memory=True,
+                    collate_fn=self.collate_fn,
+                )
+
+        else:
+
+            return DataLoader(
+                self.train_set,
+                batch_size=self.batch_size,
+                batch_sampler=None,
+                num_workers=self.num_workers,
+                pin_memory=True,
+                collate_fn=None,
+            )
 
     def val_dataloader(self) -> DataLoader:
         """Creates the validation dataloader using the validation data parser.
@@ -114,14 +219,28 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         DataLoader
             returns a pytorch DataLoader class
         """
-        return DataLoader(
-            self.val_set,
-            batch_size=self.batch_size,
-            batch_sampler=None,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            collate_fn=None,
-        )
+        if hasattr(self, "model_type"):
+            if self.model_type == "vit":
+
+                return DataLoader(
+                    self.val_set,
+                    batch_size=self.batch_size,
+                    batch_sampler=None,
+                    num_workers=self.num_workers,
+                    pin_memory=True,
+                    collate_fn=self.collate_fn,
+                )
+
+        else:
+
+            return DataLoader(
+                self.val_set,
+                batch_size=self.batch_size,
+                batch_sampler=None,
+                num_workers=self.num_workers,
+                pin_memory=True,
+                collate_fn=None,
+            )
 
     def test_dataloader(self) -> DataLoader:
         """Creates the testing dataloader using the testing data parser.
@@ -131,14 +250,28 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         DataLoader
             returns a pytorch DataLoader class
         """
-        return DataLoader(
-            self.test_set,
-            batch_size=self.batch_size,
-            batch_sampler=None,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            collate_fn=None,
-        )
+        if hasattr(self, "model_type"):
+            if self.model_type == "vit":
+
+                return DataLoader(
+                    self.test_set,
+                    batch_size=self.batch_size,
+                    batch_sampler=None,
+                    num_workers=self.num_workers,
+                    pin_memory=True,
+                    collate_fn=self.collate_fn,
+                )
+
+        else:
+
+            return DataLoader(
+                self.test_set,
+                batch_size=self.batch_size,
+                batch_sampler=None,
+                num_workers=self.num_workers,
+                pin_memory=True,
+                collate_fn=None,
+            )
 
 
 # import matplotlib as plt
