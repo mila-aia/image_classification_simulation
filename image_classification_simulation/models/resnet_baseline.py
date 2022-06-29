@@ -1,6 +1,5 @@
 import torch
 import typing
-from torch import nn
 from torchvision.models import resnet18
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
@@ -32,11 +31,13 @@ class Resnet(BaseModel):
             pretrained=hyper_params["pretrained"]
         )
         # freeze the feature extractor
-        if hyper_params["freeze_feature_extractor"]:
-            for param in self.feature_extractor.parameters():
-                param.requires_grad = False
+        if "freeze_feature_extractor" not in hyper_params:
+            hyper_params["freeze_feature_extractor"] = False
 
-        self.flatten = nn.Flatten()
+        for param in self.feature_extractor.parameters():
+            param.requires_grad = hyper_params["freeze_feature_extractor"]
+
+        self.flatten = torch.nn.Flatten()
 
         dim_features = self.feature_extractor.fc.out_features
         num_target_classes = hyper_params["num_classes"]
@@ -83,7 +84,7 @@ class Resnet(BaseModel):
         int
             The accuracy score.
         """
-        probs = nn.functional.softmax(logits, 1)
+        probs = torch.nn.functional.softmax(logits, 1)
         preds = torch.argmax(probs, 1)
         return (preds == targets).sum() / len(targets)
 
@@ -113,7 +114,9 @@ class Resnet(BaseModel):
         self.log("step", self.global_step)
         return {"loss": loss, "acc": train_acc}
 
-    def training_epoch_end(self, training_step_outputs: typing.List[float]) -> None:
+    def training_epoch_end(
+        self, training_step_outputs: typing.List[float]
+    ) -> None:
         """Is called at the end of each epoch.
 
         Parameters
@@ -225,12 +228,17 @@ class Resnet(BaseModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"size": 964, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {
+        "size": 964,
+        "loss": "CrossEntropyLoss",
+        "pretrained": True,
+        "num_classes": 964,
+    }
     model = Resnet(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((3, 3, 1024, 1024))
-    label = torch.randint(0, 964, (3,))
+    img = torch.rand((3, 3, 1024, 1024)).to(device)
+    label = torch.randint(0, 964, (3,)).to(device)
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
