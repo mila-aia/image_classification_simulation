@@ -33,17 +33,30 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         super().__init__(data_dir, hyper_params)
         self.num_unique_labels = 31
         hyper_params["num_classes"] = self.num_unique_labels
-        self.n_way = hyper_params["n_way"]
-        self.n_shot = hyper_params["n_shot"]
-        self.n_query = hyper_params["n_query"]
-        self.num_training_episodes = hyper_params["num_training_episodes"]
-        self.num_eval_tasks = hyper_params["num_eval_tasks"]
-
+        if "n_way" in hyper_params:
+            self.n_way = hyper_params["n_way"]
+        else:
+            self.n_way = 15
+        if "n_shot" in hyper_params:
+            self.n_shot = hyper_params["n_shot"]
+        else:
+            self.n_shot = 5
+        if "n_query" in hyper_params:
+            self.n_query = hyper_params["n_query"]
+        else:
+            self.n_query = 5
+        if "num_training_episodes" in hyper_params:
+            self.num_training_episodes = hyper_params["num_training_episodes"]
+        else:
+            self.num_training_episodes = 400
+        if "num_eval_tasks" in hyper_params:
+            self.num_eval_tasks = hyper_params["num_eval_tasks"]
+        else:
+            self.num_eval_tasks = 100
         if "num_workers" in hyper_params:
             self.num_workers = hyper_params["num_workers"]
         else:
             self.num_workers = 1
-
         if "image_size" in hyper_params:
             self.image_size = hyper_params["image_size"]
         else:
