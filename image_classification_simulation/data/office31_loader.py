@@ -33,6 +33,11 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         super().__init__(data_dir, hyper_params)
         self.num_unique_labels = 31
         hyper_params["num_classes"] = self.num_unique_labels
+        self.n_way = hyper_params["n_way"]
+        self.n_shot = hyper_params["n_shot"]
+        self.n_query = hyper_params["n_query"]
+        self.num_training_episodes = hyper_params["num_training_episodes"]
+        self.num_eval_tasks = hyper_params["num_eval_tasks"]
 
         if "num_workers" in hyper_params:
             self.num_workers = hyper_params["num_workers"]
@@ -157,7 +162,12 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         DataLoader
             returns a pytorch DataLoader class
         """
-        train_sampler = self.setup_train_sampler()
+        train_sampler = self.setup_train_sampler(
+            n_way=self.n_way,
+            n_shot=self.n_shot,
+            n_query=self.n_query,
+            num_training_episodes=self.num_training_episodes,
+        )
         return DataLoader(
             self.train_set,
             batch_sampler=train_sampler,
@@ -174,7 +184,12 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         DataLoader
             returns a pytorch DataLoader class
         """
-        val_sampler = self.setup_val_sampler()
+        val_sampler = self.setup_val_sampler(
+            n_way=self.n_way,
+            n_shot=self.n_way,
+            n_query=self.n_query,
+            num_eval_tasks=self.num_eval_tasks,
+        )
         return DataLoader(
             self.val_set,
             batch_sampler=val_sampler,
