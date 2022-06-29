@@ -1,14 +1,14 @@
 import torch
 import typing
 from torch import nn
-from transformers import ViTFeatureExtractor
+from transformers import ViTFeatureExtractor, ViTForImageClassification
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
 
 
 class ViT(BaseModel):
-    """Holds the ResNet model and a hidden layer."""
+    """Loads a pretrained ViT baseline (from HuggingFace) and finetunes it."""
 
     def __init__(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]):
         """Calls the parent class and sets up the necessary\
@@ -32,12 +32,10 @@ class ViT(BaseModel):
             "google/vit-base-patch16-224-in21k"
         )
 
-        self.flatten = nn.Flatten()
-        self.linear1 = torch.nn.Linear(1000, hyper_params["size"])
-        self.linear2 = torch.nn.Linear(
-            hyper_params["size"], hyper_params["num_classes"]
-        )  # 964: number of classes in Omniglot
-        self.activation = torch.nn.ReLU()
+        self.model = ViTForImageClassification.from_pretrained(
+            "google/vit-base-patch16-224-in21k",
+            num_labels=hyper_params["num_classes"],
+        )
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -163,18 +161,16 @@ class ViT(BaseModel):
             Logit scores
         """
         # Extract the features of support and query images
+
         z_x = self.feature_extractor.forward(batch_images)
-        z_x = self.flatten(z_x)
-        z_x = self.linear1(z_x)
-        z_x = self.activation(z_x)
-        logits = self.linear2(z_x)
+        logits = self.model(z_x)
 
         return logits
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"size": 964, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {"loss": "CrossEntropyLoss", "pretrained": True}
     model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
