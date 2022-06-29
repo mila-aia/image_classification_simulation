@@ -1,9 +1,9 @@
 import typing
-from torchvision import transforms
 import numpy as np
+from torchvision import transforms
 from torchvision.datasets import ImageFolder
-from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader, random_split
+from image_classification_simulation.data.data_loader import MyDataModule
 from easyfsl.samplers import TaskSampler
 
 
@@ -38,30 +38,23 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.num_workers = hyper_params["num_workers"]
         else:
             self.num_workers = 1
-            print("Number of workers set to:", self.num_workers)
 
         if "image_size" in hyper_params:
             self.image_size = hyper_params["image_size"]
         else:
-            self.image_size = 200
-            print("image size set to:", self.image_size)
+            self.image_size = 300
 
         self.train_set_transformation = transforms.Compose(
             [
-                transforms.RandomResizedCrop(300),
-                # transforms.Resize(300),
-                # transforms.RandomHorizontalFlip(),
+                transforms.RandomResizedCrop(self.image_size),
                 transforms.ToTensor(),
-                # transforms.Normalize(mean=0, std=1),
             ]
         )
 
         self.test_set_transformation = transforms.Compose(
             [
-                transforms.Resize(300),
-                # transforms.CenterCrop(224),
+                transforms.Resize(self.image_size),
                 transforms.ToTensor(),
-                # transforms.Normalize(mean=0, std=1)
             ]
         )
 
@@ -94,12 +87,24 @@ class Office31Loader(MyDataModule):  # pragma: no cover
                 root=self.data_dir, transform=self.test_set_transformation
             )
 
-    def setup_val_sampler(self):
-        N_WAY = 15  # Number of classes in a task
-        N_SHOT = 10  # Number of images per class in the support set
-        N_QUERY = 10  # Number of images per class in the query set
-        N_EVALUATION_TASKS = 100
+    def setup_val_sampler(
+        self,
+        n_way: int = 15,
+        n_shot: int = 5,
+        n_query: int = 5,
+        num_eval_tasks: int = 100,
+    ) -> None:
+        """Sets up the validation sampler.
 
+        Parameters
+        ----------
+        n_way : int, optional
+            Number of classes in a task, by default 15
+        n_shot : int, optional
+            Number of images per class in the support set, by default 5
+        n_query : int, optional
+            Number of images per class in the query set, by default 5
+        """
         # The sampler needs a dataset with a "get_labels" method.
         # Check the code if you have any doubt!
         self.val_set.get_labels = lambda: [
@@ -107,28 +112,40 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         ]
         val_sampler = TaskSampler(
             self.val_set,
-            n_way=N_WAY,
-            n_shot=N_SHOT,
-            n_query=N_QUERY,
-            n_tasks=N_EVALUATION_TASKS,
+            n_way=n_way,
+            n_shot=n_shot,
+            n_query=n_query,
+            n_tasks=num_eval_tasks,
         )
         return val_sampler
 
-    def setup_train_sampler(self):
-        N_WAY = 15  # Number of classes in a task
-        N_SHOT = 10  # Number of images per class in the support set
-        N_QUERY = 10  # Number of images per class in the query set
-        N_TRAINING_EPISODES = 400
+    def setup_train_sampler(
+        self,
+        n_way: int = 15,
+        n_shot: int = 5,
+        n_query: int = 5,
+        num_training_episodes: int = 400,
+    ) -> None:
+        """Sets up the training sampler.
 
+        Parameters
+        ----------
+        n_way : int, optional
+            Number of classes in a task, by default 15
+        n_shot : int, optional
+            Number of images per class in the support set, by default 5
+        n_query : int, optional
+            Number of images per class in the query set, by default 5
+        """
         self.train_set.get_labels = lambda: [
             instance[1] for instance in self.train_set
         ]
         train_sampler = TaskSampler(
             self.train_set,
-            n_way=N_WAY,
-            n_shot=N_SHOT,
-            n_query=N_QUERY,
-            n_tasks=N_TRAINING_EPISODES,
+            n_way=n_way,
+            n_shot=n_shot,
+            n_query=n_query,
+            n_tasks=num_training_episodes,
         )
         return train_sampler
 
