@@ -113,7 +113,15 @@ class Resnet(BaseModel):
         self.log("step", self.global_step)
         return {"loss": loss, "acc": train_acc}
 
-    def training_epoch_end(self, training_step_outputs):
+    def training_epoch_end(self, training_step_outputs: typing.List[float]) -> None:
+        """Is called at the end of each epoch.
+
+        Parameters
+        ----------
+        training_step_outputs : typing.List[float]
+            A list of training accuracy scores\
+                    produced by the training step.
+        """
         overal_train_acc = torch.stack(
             [i["acc"] for i in training_step_outputs]
         ).mean()
@@ -147,7 +155,22 @@ class Resnet(BaseModel):
         self.log("val_acc", val_acc.item())
         return val_acc
 
-    def validation_epoch_end(self, validation_step_outputs):
+    def validation_epoch_end(
+        self, validation_step_outputs: typing.List[float]
+    ) -> float:
+        """Is called at the end of each epoch.
+
+        Parameters
+        ----------
+        validation_step_outputs : typing.List[float]
+            A list of validation accuracy scores\
+                 produced by the validation step.
+
+        Returns
+        -------
+        float
+            The average validation accuracy over all batches.
+        """
         # last batch is always smaller than the others
         # we are not accounting for it here
         overall_val_acc = torch.stack(validation_step_outputs).mean()
