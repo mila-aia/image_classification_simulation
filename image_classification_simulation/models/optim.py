@@ -26,11 +26,15 @@ def load_optimizer(hyper_params: dict, model: object):  # pragma: no cover
         lr = hyper_params["lr"]
     else:
         lr = 0.001
+    if "momentum" in hyper_params:
+        momentum = hyper_params["momentum"]
+    else:
+        momentum = 0.9
     # __TODO__ fix optimizer list
     if optimizer_name == "adam":
         optimizer = optim.Adam(model.parameters(), lr)
     elif optimizer_name == "sgd":
-        optimizer = optim.SGD(model.parameters(), lr)
+        optimizer = optim.SGD(model.parameters(), lr, momentum)
     else:
         raise ValueError("optimizer {} not supported".format(optimizer_name))
     return optimizer
