@@ -1,6 +1,5 @@
 import torch
 import typing
-from torch import nn
 from transformers import ViTFeatureExtractor, ViTForImageClassification
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
@@ -20,7 +19,7 @@ class ViT(BaseModel):
             A dictionary of hyperparameters
         """
         super(ViT, self).__init__()
-        check_and_log_hp(["size"], hyper_params)
+        check_and_log_hp(["num_classes"], hyper_params)
 
         self.save_hyperparameters(
             hyper_params
@@ -32,9 +31,10 @@ class ViT(BaseModel):
             "google/vit-base-patch16-224-in21k"
         )
 
-        self.model = ViTForImageClassification.from_pretrained(
-            "google/vit-base-patch16-224-in21k",
-            num_labels=hyper_params["num_classes"],
+        self.num_classes = hyper_params["num_classes"]
+
+        self.vit = ViTForImageClassification.from_pretrained(
+            "google/vit-base-patch16-224-in21k", num_labels=self.num_classes
         )
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
@@ -74,7 +74,7 @@ class ViT(BaseModel):
         int
             The accuracy score.
         """
-        probs = nn.functional.softmax(logits, 0)
+        probs = torch.nn.functional.softmax(logits, 1)
         preds = torch.argmax(probs, 1)
         return (preds == targets).sum().item() / len(targets)
 
@@ -99,6 +99,8 @@ class ViT(BaseModel):
         self.log("train_loss", loss)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
+        # this function is required,
+        # as the loss returned here is used for backprop
         return loss
 
     def validation_step(
@@ -119,10 +121,12 @@ class ViT(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
-        input_data, targets = batch
-        val_acc = self.compute_accuracy(logits, targets)
-        self.log("val_loss", loss)
-        self.log("val_acc", val_acc)
+        self.log("train_loss", loss)
+        self.log("epoch", self.current_epoch)
+        self.log("step", self.global_step)
+        # this function is required,
+        # as the loss returned here is used for backprop
+        return loss
 
     def test_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -160,22 +164,21 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        # Extract the features of support and query images
-
-        z_x = self.feature_extractor.forward(batch_images)
-        logits = self.model(z_x)
+        z_x = self.feature_extractor(batch_images, return_tensors="pt")
+        z_x = self.vit(pixel_values=z_x["pixel_values"])
+        logits = z_x.logits
 
         return logits
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {"loss": "CrossEntropyLoss", "pretrained": True, "num_classes": 31}
     model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((3, 3, 1024, 1024))
-    label = torch.randint(0, 964, (3,))
+    img = torch.rand((100, 100, 3)).to(device)
+    label = torch.randint(0, 31, (1,)).to(device)
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
