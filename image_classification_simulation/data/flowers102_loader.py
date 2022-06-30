@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 # we just have to deal with it
 
 
-class Flowers102DataLoader(MyDataModule):  # pragma: no cover
+class Flowers102Loader(MyDataModule):  # pragma: no cover
     """Data module class that prepares dataset."""
 
     def __init__(
@@ -144,5 +144,5 @@ class Flowers102DataLoader(MyDataModule):  # pragma: no cover
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 32, "image_size": 28}
-    flowers_loader = Flowers102DataLoader("./examples/data/", args)
+    flowers_loader = Flowers102Loader("./examples/data/", args)
     flowers_loader.setup(stage="fit")
