@@ -1,14 +1,15 @@
 # general
 batch_size: 32
-optimizer: adam
+optimizer: sgd
 loss: CrossEntropyLoss
-patience: 5
+patience: 10
 architecture: resnet
 pretrained: True
 max_epoch: 99
-exp_name: resnet_test_exp
+exp_name: test_exp
 freeze_feature_extractor: True
 data: Office31
+lr : 0.0001
 # set to null to avoid setting a seed (can speed up GPU computation, but
 # results will not be reproducible)
 seed: 1234
