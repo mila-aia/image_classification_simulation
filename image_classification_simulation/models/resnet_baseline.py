@@ -44,7 +44,7 @@ class Resnet(BaseModel):
         self.feature_extractor = torch.nn.Sequential(*layers)
         self.flatten = torch.nn.Flatten()
         num_target_classes = hyper_params["num_classes"]
-        dim_features = 512 # self.feature_extractor.fc.out_features
+        dim_features = 512
         self.linear = torch.nn.Linear(dim_features, num_target_classes)
 
     def configure_optimizers(self) -> typing.Any:
@@ -56,9 +56,7 @@ class Resnet(BaseModel):
             The optimizer.
         """
         optimizer = load_optimizer(self.hparams, self)
-        scheduler = lr_scheduler.StepLR(
-            optimizer, step_size=0.9, gamma=0.1
-            )
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=0.9, gamma=0.1)
         return [optimizer], [scheduler]
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
