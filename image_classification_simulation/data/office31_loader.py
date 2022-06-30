@@ -1,7 +1,7 @@
 import typing
 from torchvision import transforms
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 from torchvision.datasets import ImageFolder
 from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader, random_split
@@ -45,9 +45,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         else:
             self.image_size = 200
             print("image size set to:", self.image_size)
-
-        if "model" in hyper_params:
-            self.model_type = hyper_params["model"]
 
         if "train_test_split" in hyper_params:
             self.train_test_split = hyper_params["train_test_split"]
@@ -151,6 +148,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             collate_fn=None,
         )
 
+
 # import matplotlib as plt
 if __name__ == "__main__":
     # tests the dataloader module
@@ -161,5 +159,5 @@ if __name__ == "__main__":
     img, label = next(i)
     trans = transforms.ToPILImage()
     plt.imshow(trans(img))
-    #plt.savefig('test.png')
+    # plt.savefig('test.png')
     print(office31_loader)
