@@ -12,6 +12,7 @@ setup(
     ),
     python_requires=">=3.8",
     install_requires=[
+        "easyfsl",
         "flake8",
         "flake8-docstrings",
         "gitpython",
