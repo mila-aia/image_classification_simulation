@@ -219,9 +219,7 @@ class Resnet(BaseModel):
         # Extract the features of support and query images
         z_x = self.feature_extractor.forward(batch_images)
         z_x = self.flatten(z_x)
-        z_x = self.linear1(z_x)
-        z_x = self.activation(z_x)
-        logits = self.linear2(z_x)
+        logits = self.linear(z_x)
 
         return logits
 
