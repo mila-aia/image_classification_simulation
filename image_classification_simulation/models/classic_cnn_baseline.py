@@ -20,7 +20,7 @@ class ClassicCNN(BaseModel):
             A dictionary of hyperparameters
         """
         super(ClassicCNN, self).__init__()
-        check_and_log_hp(["size"], hyper_params)
+        check_and_log_hp(["num_classes"], hyper_params)
 
         self.save_hyperparameters(
             hyper_params
@@ -108,7 +108,7 @@ class ClassicCNN(BaseModel):
 
         self.linear1 = nn.Linear(fc_size, 256)
         self.linear2 = nn.Linear(256, 128)
-        self.linear3 = nn.Linear(128, hyper_params["size"])
+        self.linear3 = nn.Linear(128, hyper_params["num_classes"])
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -269,7 +269,7 @@ class ClassicCNN(BaseModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"size": 10, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {"num_classes": 10, "loss": "CrossEntropyLoss", "pretrained": True}
     model = ClassicCNN(hparams).to(device)
     print(model)
     # generate a random image to test the module
