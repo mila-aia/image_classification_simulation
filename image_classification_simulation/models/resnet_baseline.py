@@ -4,6 +4,8 @@ from torchvision.models import resnet18
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
+from image_classification_simulation.models.optim import load_optimizer
+from torch.optim import lr_scheduler
 
 
 class Resnet(BaseModel):
@@ -33,19 +35,31 @@ class Resnet(BaseModel):
         # freeze the feature extractor
         if "freeze_feature_extractor" not in hyper_params:
             hyper_params["freeze_feature_extractor"] = False
+        else:
+            for param in self.feature_extractor.parameters():
+                param.requires_grad = hyper_params["freeze_feature_extractor"]
 
-        for param in self.feature_extractor.parameters():
-            param.requires_grad = hyper_params["freeze_feature_extractor"]
-
+        # replace the last layer with a linear layer
+        layers = list(self.feature_extractor.children())[:-1]
+        self.feature_extractor = torch.nn.Sequential(*layers)
         self.flatten = torch.nn.Flatten()
-
-        dim_features = self.feature_extractor.fc.out_features
         num_target_classes = hyper_params["num_classes"]
-        self.linear1 = torch.nn.Linear(dim_features, hyper_params["size"])
-        self.linear2 = torch.nn.Linear(
-            hyper_params["size"], num_target_classes
-        )
-        self.activation = torch.nn.ReLU()
+        dim_features = 512 # self.feature_extractor.fc.out_features
+        self.linear = torch.nn.Linear(dim_features, num_target_classes)
+
+    def configure_optimizers(self) -> typing.Any:
+        """Configures the optimizer.
+
+        Returns
+        -------
+        typing.Any
+            The optimizer.
+        """
+        optimizer = load_optimizer(self.hparams, self)
+        scheduler = lr_scheduler.StepLR(
+            optimizer, step_size=0.9, gamma=0.1
+            )
+        return [optimizer], [scheduler]
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
