@@ -1,9 +1,7 @@
 import typing
 from torchvision import transforms
-import torch
 import numpy as np
-from datasets import load_dataset
-from transformers import ViTFeatureExtractor
+import matplotlib.pyplot as plt 
 from torchvision.datasets import ImageFolder
 from image_classification_simulation.data.data_loader import MyDataModule
 from torch.utils.data import DataLoader, random_split
@@ -153,16 +151,15 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             collate_fn=None,
         )
 
-
 # import matplotlib as plt
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8, "image_size": 200}
-    office31_loader = Office31Loader("../../examples/data/amazon", args)
+    office31_loader = Office31Loader("./examples/data/domain_adaptation_images/amazon/images", args)
     office31_loader.setup(stage="fit")
     i = iter(office31_loader.train_set.dataset)
     img, label = next(i)
-    # trans = transforms.ToPILImage()
-    # plt.imshow(trans(img))
-    # plt.savefig('test.png')
-    # print(office31_loader)
+    trans = transforms.ToPILImage()
+    plt.imshow(trans(img))
+    #plt.savefig('test.png')
+    print(office31_loader)
