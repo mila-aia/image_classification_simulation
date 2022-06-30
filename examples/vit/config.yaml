@@ -1,0 +1,21 @@
+# general
+batch_size: 16
+optimizer: adamW
+loss: CrossEntropyLoss
+patience: 5
+lr: 0.0003
+architecture: vit
+pretrained: False
+max_epoch: 2
+exp_name: vit_test_exp
+# dataset
+data: Office31
+img_size: 100
+size: 31
+num_channels: 3
+# set to null to avoid setting a seed (can speed up GPU computation, but
+# results will not be reproducible)
+seed: 1234
+# architecture
+num_filters: 16
+
