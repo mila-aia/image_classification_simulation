@@ -1,6 +1,5 @@
 import torch
 import typing
-import numpy as np
 from torch import nn
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
@@ -45,39 +44,35 @@ class ConvAutoEncoder(BaseModel):
 
         self.conv2 = nn.Conv2d(
             self.num_filters,
-            self.num_filters/2,
+            self.num_filters / 2,
             kernel_size=3,
             stride=2,
             padding=1,
         )
 
-
         self.deconv1 = nn.ConvTranspose2d(
-            self.num_filters/2,
+            self.num_filters / 2,
             self.num_filters,
             kernel_size=3,
             stride=2,
             padding=1,
         )
-
 
         self.deconv2 = nn.ConvTranspose2d(
             self.num_filters,
-            self.num_filters/2,
+            self.num_filters / 2,
             kernel_size=5,
             stride=3,
             padding=1,
         )
 
-
         self.deconv3 = nn.ConvTranspose2d(
-            self.num_filters/2,
+            self.num_filters / 2,
             1,
             kernel_size=2,
             stride=2,
             padding=1,
         )
-
 
         self.encoder = nn.Sequential(
             self.conv1(),
@@ -96,12 +91,6 @@ class ConvAutoEncoder(BaseModel):
             self.deconv3(),
             nn.Tanh(),
         )
-
-
-
-
-
-
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -234,15 +223,18 @@ class ConvAutoEncoder(BaseModel):
         return logits
 
 
-
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"num_classes": 10, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {
+        "num_classes": 31,
+        "loss": "MSELoss",
+        "optimizer": "adam",
+    }
     model = ConvAutoEncoder(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((3, 3, 1024, 1024))
-    label = torch.randint(0, 10, (3,))
+    img = torch.rand((3, 3, 100, 100))
+    label = torch.randint(0, 31, (3,))
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
