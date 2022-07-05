@@ -244,8 +244,8 @@ if __name__ == "__main__":
     model = ConvAutoEncoder(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((1, 3, 100, 100))
-    label = torch.randint(0, 31, (3,))
+    img = torch.rand((16, 3, 100, 100))
+    label = torch.randint(0, 31, (16,))
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
