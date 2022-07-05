@@ -164,7 +164,8 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        z_x = self.feature_extractor(batch_images, return_tensors="pt")
+        z_x = self.feature_extractor(batch_images.to('cpu'), return_tensors="pt")
+        z_x = z_x.to(device)
         z_x = self.vit(pixel_values=z_x["pixel_values"])
         logits = z_x.logits
 
