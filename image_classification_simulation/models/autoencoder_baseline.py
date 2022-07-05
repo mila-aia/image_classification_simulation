@@ -30,7 +30,7 @@ class ConvAutoEncoder(BaseModel):
         if "num_filters" in hyper_params:
             self.num_filters = hyper_params["num_filters"]
         else:
-            self.num_filters = 16
+            self.num_filters = 32
 
         # defining network layers
 
@@ -38,57 +38,64 @@ class ConvAutoEncoder(BaseModel):
             hyper_params["num_channels"],
             self.num_filters,
             kernel_size=3,
-            stride=3,
+            stride=1,
             padding=1,
         )
 
         self.conv2 = nn.Conv2d(
             self.num_filters,
-            self.num_filters / 2,
+            self.num_filters // 2,
             kernel_size=3,
-            stride=2,
+            stride=1,
+            padding=1,
+        )
+
+        self.conv3 = nn.Conv2d(
+            self.num_filters // 2,
+            self.num_filters // 4,
+            kernel_size=3,
+            stride=1,
             padding=1,
         )
 
         self.deconv1 = nn.ConvTranspose2d(
-            self.num_filters / 2,
-            self.num_filters,
+            self.num_filters // 4,
+            self.num_filters // 2,
             kernel_size=3,
-            stride=2,
+            stride=1,
             padding=1,
         )
 
         self.deconv2 = nn.ConvTranspose2d(
+            self.num_filters // 2,
             self.num_filters,
-            self.num_filters / 2,
-            kernel_size=5,
-            stride=3,
+            kernel_size=3,
+            stride=1,
             padding=1,
         )
 
         self.deconv3 = nn.ConvTranspose2d(
-            self.num_filters / 2,
-            1,
-            kernel_size=2,
-            stride=2,
+            self.num_filters,
+            hyper_params["num_channels"],
+            kernel_size=3,
+            stride=1,
             padding=1,
         )
 
         self.encoder = nn.Sequential(
-            self.conv1(),
+            self.conv1,
             nn.ReLU(),
-            nn.MaxPool2d(2, 2),
-            self.conv2(),
+            self.conv2,
             nn.ReLU(),
-            nn.MaxPool2d(2, 1),
+            self.conv3,
         )
 
         self.decoder = nn.Sequential(
-            self.deconv1(),
+            self.deconv1,
             nn.ReLU(),
-            self.deconv2(),
+            self.deconv2,
             nn.ReLU(),
-            self.deconv3(),
+            self.deconv3,
             nn.Tanh(),
         )
 
@@ -109,7 +116,9 @@ class ConvAutoEncoder(BaseModel):
         """
         input_data, targets = batch
         logits = self(input_data)  # calls the forward pass of the model
-        loss = self.loss_fn(logits, targets)
+        print("targets shape: ", targets.shape)
+        print("logits shape: ", logits.shape)
+        loss = self.loss_fn(logits, input_data)
         return loss, logits
 
     def compute_accuracy(
@@ -218,6 +227,7 @@ class ConvAutoEncoder(BaseModel):
         # print(batch_images.shape)
 
         z_x = self.encoder(batch_images)
+        print("shape of code: ", z_x.shape)
         logits = self.decoder(z_x)
 
         return logits
@@ -229,11 +239,12 @@ if __name__ == "__main__":
         "num_classes": 31,
         "loss": "MSELoss",
         "optimizer": "adam",
+        "num_channels": 3,
     }
     model = ConvAutoEncoder(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((3, 3, 100, 100))
+    img = torch.rand((1, 3, 100, 100))
     label = torch.randint(0, 31, (3,))
     print(model(img).shape)
 
