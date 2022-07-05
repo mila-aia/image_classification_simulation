@@ -1,13 +1,13 @@
 import torch
 import typing
-from torchvision.models import resnet18
+from transformers import ViTFeatureExtractor, ViTForImageClassification
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
 
 
-class Resnet(BaseModel):
-    """Holds the ResNet model and a hidden layer."""
+class ViT(BaseModel):
+    """Loads a pretrained ViT baseline (from HuggingFace) and finetunes it."""
 
     def __init__(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]):
         """Calls the parent class and sets up the necessary\
@@ -18,8 +18,8 @@ class Resnet(BaseModel):
         hyper_params : typing.Dict[typing.AnyStr, typing.Any]
             A dictionary of hyperparameters
         """
-        super(Resnet, self).__init__()
-        check_and_log_hp(["size"], hyper_params)
+        super(ViT, self).__init__()
+        check_and_log_hp(["num_classes"], hyper_params)
 
         self.save_hyperparameters(
             hyper_params
@@ -27,25 +27,15 @@ class Resnet(BaseModel):
 
         self.loss_fn = load_loss(hyper_params)
         # load the feature extractor
-        self.feature_extractor = resnet18(
-            pretrained=hyper_params["pretrained"]
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained(
+            "google/vit-base-patch16-224-in21k"
         )
-        # freeze the feature extractor
-        if "freeze_feature_extractor" not in hyper_params:
-            hyper_params["freeze_feature_extractor"] = False
 
-        for param in self.feature_extractor.parameters():
-            param.requires_grad = hyper_params["freeze_feature_extractor"]
+        self.num_classes = hyper_params["num_classes"]
 
-        self.flatten = torch.nn.Flatten()
-
-        dim_features = self.feature_extractor.fc.out_features
-        num_target_classes = hyper_params["num_classes"]
-        self.linear1 = torch.nn.Linear(dim_features, hyper_params["size"])
-        self.linear2 = torch.nn.Linear(
-            hyper_params["size"], num_target_classes
+        self.vit = ViTForImageClassification.from_pretrained(
+            "google/vit-base-patch16-224-in21k", num_labels=self.num_classes
         )
-        self.activation = torch.nn.ReLU()
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -86,7 +76,7 @@ class Resnet(BaseModel):
         """
         probs = torch.nn.functional.softmax(logits, 1)
         preds = torch.argmax(probs, 1)
-        return (preds == targets).sum() / len(targets)
+        return (preds == targets).sum().item() / len(targets)
 
     def training_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -106,33 +96,12 @@ class Resnet(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
-        input_data, targets = batch
-        train_acc = self.compute_accuracy(logits, targets)
         self.log("train_loss", loss)
-        self.log("train_acc", train_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
-        return {"loss": loss, "acc": train_acc}
-
-    def training_epoch_end(
-        self, training_step_outputs: typing.List[float]
-    ) -> None:
-        """Is called at the end of each epoch.
-
-        Parameters
-        ----------
-        training_step_outputs : typing.List[float]
-            A list of training accuracy scores\
-                    produced by the training step.
-        """
-        overal_train_acc = torch.stack(
-            [i["acc"] for i in training_step_outputs]
-        ).mean()
-        overal_train_loss = torch.stack(
-            [i["loss"] for i in training_step_outputs]
-        ).mean()
-        self.log("overall_train_loss", overal_train_loss)
-        self.log("overall_train_acc", overal_train_acc.item())
+        # this function is required,
+        # as the loss returned here is used for backprop
+        return loss
 
     def validation_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -152,33 +121,12 @@ class Resnet(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
-        input_data, targets = batch
-        val_acc = self.compute_accuracy(logits, targets)
-        self.log("val_loss", loss)
-        self.log("val_acc", val_acc.item())
-        return val_acc
-
-    def validation_epoch_end(
-        self, validation_step_outputs: typing.List[float]
-    ) -> float:
-        """Is called at the end of each epoch.
-
-        Parameters
-        ----------
-        validation_step_outputs : typing.List[float]
-            A list of validation accuracy scores\
-                 produced by the validation step.
-
-        Returns
-        -------
-        float
-            The average validation accuracy over all batches.
-        """
-        # last batch is always smaller than the others
-        # we are not accounting for it here
-        overall_val_acc = torch.stack(validation_step_outputs).mean()
-        self.log("overall_val_acc", overall_val_acc)
-        return overall_val_acc
+        self.log("train_loss", loss)
+        self.log("epoch", self.current_epoch)
+        self.log("step", self.global_step)
+        # this function is required,
+        # as the loss returned here is used for backprop
+        return loss
 
     def test_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -216,29 +164,21 @@ class Resnet(BaseModel):
         torch.Tensor
             Logit scores
         """
-        # Extract the features of support and query images
-        z_x = self.feature_extractor.forward(batch_images)
-        z_x = self.flatten(z_x)
-        z_x = self.linear1(z_x)
-        z_x = self.activation(z_x)
-        logits = self.linear2(z_x)
+        z_x = self.feature_extractor(batch_images, return_tensors="pt")
+        z_x = self.vit(pixel_values=z_x["pixel_values"])
+        logits = z_x.logits
 
         return logits
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {
-        "size": 964,
-        "loss": "CrossEntropyLoss",
-        "pretrained": True,
-        "num_classes": 964,
-    }
-    model = Resnet(hparams).to(device)
+    hparams = {"loss": "CrossEntropyLoss", "pretrained": True, "num_classes": 31}
+    model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((3, 3, 1024, 1024)).to(device)
-    label = torch.randint(0, 964, (3,)).to(device)
+    img = torch.rand((100, 100, 3)).to(device)
+    label = torch.randint(0, 31, (1,)).to(device)
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)

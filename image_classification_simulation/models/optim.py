@@ -29,6 +29,8 @@ def load_optimizer(hyper_params: dict, model: object):  # pragma: no cover
     # __TODO__ fix optimizer list
     if optimizer_name == "adam":
         optimizer = optim.Adam(model.parameters(), lr)
+    elif optimizer_name == "adamW":
+        optimizer = optim.AdamW(model.parameters(), lr)
     elif optimizer_name == "sgd":
         optimizer = optim.SGD(model.parameters(), lr)
     else:
