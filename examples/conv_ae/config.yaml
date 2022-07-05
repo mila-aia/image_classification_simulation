@@ -11,7 +11,7 @@ exp_name: ae_test_exp
 # dataset
 data: Office31
 img_size: 100
-size: 31
+num_classes: 31
 num_channels: 3
 # set to null to avoid setting a seed (can speed up GPU computation, but
 # results will not be reproducible)
