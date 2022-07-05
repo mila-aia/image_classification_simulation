@@ -184,7 +184,7 @@ class ConvAutoEncoder(BaseModel):
         """
         loss, logits = self._generic_step(batch, batch_idx)
         input_data, targets = batch
-        val_acc = self.compute_accuracy(logits, targets)
+        val_acc = self.compute_accuracy(logits, input_data)
         self.log("val_loss", loss)
         self.log("val_acc", val_acc)
 
@@ -207,7 +207,7 @@ class ConvAutoEncoder(BaseModel):
         """
         loss, logits = self._generic_step(batch, batch_idx)
         input_data, targets = batch
-        test_acc = self.compute_accuracy(logits, targets)
+        test_acc = self.compute_accuracy(logits, input_data)
         self.log("test_loss", loss)
         self.log("test_acc", test_acc)
 
