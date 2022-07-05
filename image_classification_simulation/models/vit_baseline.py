@@ -164,8 +164,10 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        z_x = self.feature_extractor(batch_images, return_tensors="pt")
-        z_x = self.vit(pixel_values=z_x["pixel_values"])
+        batch_images = list(batch_images)
+        z_x = self.feature_extractor(images=batch_images, return_tensors="pt")
+        pixel_values = z_x["pixel_values"].to(device)
+        z_x = self.vit(pixel_values)
         logits = z_x.logits
 
         return logits
@@ -173,12 +175,16 @@ class ViT(BaseModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"loss": "CrossEntropyLoss", "pretrained": True, "num_classes": 31}
+    hparams = {
+        "loss": "CrossEntropyLoss",
+        "pretrained": True,
+        "num_classes": 31,
+    }
     model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((100, 100, 3)).to(device)
-    label = torch.randint(0, 31, (1,)).to(device)
+    img = torch.rand((16, 3, 224, 224)).to(device)
+    label = torch.randint(0, 31, (16,)).to(device)
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
