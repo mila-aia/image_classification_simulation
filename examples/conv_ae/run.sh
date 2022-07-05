@@ -1,1 +1,1 @@
-main --data ../../examples/data/domain_adaptation_images/amazon/images --output ./output --config ./config.yaml --start-from-scratch
+main --data ../../examples/data/MNIST --output ./output --config ./config.yaml --start-from-scratch
