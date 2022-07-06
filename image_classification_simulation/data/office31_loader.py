@@ -14,7 +14,9 @@ class Office31Loader(MyDataModule):  # pragma: no cover
     Prepares dataset parsers and instantiates data loaders.
     """
 
-    def validate_hparams(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]) -> None:
+    def validate_hparams(
+        self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]
+    ) -> None:
         if "n_way" in hyper_params:
             self.n_way = hyper_params["n_way"]
         else:
@@ -49,8 +51,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         else:
             self.train_test_split = 0.15
 
-    # We are going to use the amazon data
-    # (most similar to a catalog of online products)
     def __init__(
         self,
         data_dir: typing.AnyStr,
@@ -93,20 +93,18 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         ----------
         stage : string, optional
             Stage of training (training, validation, testing), by default None
+        valid_size : float, optional
+            Fraction of the dataset to be used for validation, by default 0.1
+        test_size : float, optional
+            Fraction of the dataset to be used for testing, by default 0.1
         """
-        # here, we will actually assign
-        # train/val datasets for use in dataloaders
 
         dataset = ImageFolder(
-                root=self.data_dir, transform=self.train_set_transformation
-            )
+            root=self.data_dir, transform=self.train_set_transformation
+        )
 
-        n_val = int(
-            np.floor(self.train_test_split * len(dataset))
-        )
-        n_test = int(
-            np.floor(self.train_test_split * len(dataset))
-        )
+        n_val = int(np.floor(self.train_test_split * len(dataset)))
+        n_test = int(np.floor(self.train_test_split * len(dataset)))
 
         n_train = len(dataset) - n_val - n_test
 
@@ -165,18 +163,33 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             collate_fn=None,
         )
 
-class Office31_Fewshot_Loader(Office31Loader):
-    def setup(self,  valid_size: float = 0.1, test_size: float = 0.1):
-        self.dataset = ImageFolder(
-                root=self.data_dir, transform=self.train_set_transformation
-            )
 
-        n_val = int(
-            np.floor(valid_size * len(self.dataset))
+class Office31_Fewshot_Loader(Office31Loader):
+    """Few shot Officee31 data loader class."""
+
+    def setup(
+        self,
+        stage: str = "fit",
+        valid_size: float = 0.1,
+        test_size: float = 0.1,
+    ):
+        """Parses and splits all samples across the train/valid/test parsers.
+
+        Parameters
+        ----------
+        stage : string, optional
+            Stage of training (training, validation, testing), by default None
+        valid_size : float, optional
+            Fraction of the dataset to be used for validation, by default 0.1
+        test_size : float, optional
+            Fraction of the dataset to be used for testing, by default 0.1
+        """
+        self.dataset = ImageFolder(
+            root=self.data_dir, transform=self.train_set_transformation
         )
-        n_test = int(
-            np.floor(test_size * len(self.dataset))
-        )
+
+        n_val = int(np.floor(valid_size * len(self.dataset)))
+        n_test = int(np.floor(test_size * len(self.dataset)))
 
         n_train = len(self.dataset) - n_val - n_test
 
@@ -191,7 +204,7 @@ class Office31_Fewshot_Loader(Office31Loader):
         self.val_set.get_labels = lambda: [
             instance[1] for instance in self.val_set
         ]
-        
+
         self.train_sampler = TaskSampler(
             self.train_set,
             n_way=self.n_way,
@@ -239,6 +252,7 @@ class Office31_Fewshot_Loader(Office31Loader):
             pin_memory=True,
             collate_fn=self.eval_sampler.episodic_collate_fn,
         )
+
     def test_dataloader(self) -> DataLoader:
         """Creates the training dataloader using the training data parser.
 
@@ -260,7 +274,9 @@ class Office31_Fewshot_Loader(Office31Loader):
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8, "image_size": 200}
-    office31_loader = Office31Loader("./examples/data/domain_adaptation_images/amazon/images", args)
+    office31_loader = Office31Loader(
+        "./examples/data/domain_adaptation_images/amazon/images", args
+    )
     office31_loader.setup()
     i = iter(office31_loader.train_set.dataset)
     img, label = next(i)
@@ -271,16 +287,22 @@ if __name__ == "__main__":
 
     hparams = {
         "num_workers": 2,
-        'batch_size': 32,
+        "batch_size": 32,
         "n_way": 31,
-        "n_shot": 5,
-        "n_query": 5,
+        "n_shot": 10,
+        "n_query": 10,
         "num_training_episodes": 400,
         "num_eval_tasks": 50,
     }
-    office_loader = Office31_Fewshot_Loader(data_dir="./examples/data/domain_adaptation_images/amazon/images/", hyper_params=hparams)
-    office_loader.setup(.4,.4)
+    office_loader = Office31_Fewshot_Loader(
+        data_dir="./examples/data/domain_adaptation_images/amazon/images/",
+        hyper_params=hparams,
+    )
+    office_loader.setup(0.1, 0.1)
     train_loader = office_loader.train_dataloader()
     val_loader = office_loader.val_dataloader()
+    test_loader = office_loader.test_dataloader()
 
     enumerate(train_loader)
+    enumerate(val_loader)
+    enumerate(test_loader)
