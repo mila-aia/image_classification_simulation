@@ -1,7 +1,6 @@
 import torch
 import typing
 from torch import nn
-from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
 
