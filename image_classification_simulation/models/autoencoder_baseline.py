@@ -7,7 +7,7 @@ from image_classification_simulation.models.my_model import BaseModel
 
 
 class ConvAutoEncoder(BaseModel):
-    """Holds a simple standard CNN model."""
+    """Holds a simple conv. autoencoder model."""
 
     def __init__(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]):
         """Calls the parent class and sets up the necessary\
@@ -19,7 +19,6 @@ class ConvAutoEncoder(BaseModel):
             A dictionary of hyperparameters
         """
         super(ConvAutoEncoder, self).__init__()
-        check_and_log_hp(["num_classes"], hyper_params)
 
         self.save_hyperparameters(
             hyper_params
@@ -114,33 +113,33 @@ class ConvAutoEncoder(BaseModel):
         typing.Any
             returns loss and logit scores.
         """
-        input_data, targets = batch
-        logits = self(input_data)  # calls the forward pass of the model
-        print("targets shape: ", targets.shape)
-        print("logits shape: ", logits.shape)
-        loss = self.loss_fn(logits, input_data)
-        return loss, logits
+        input_data, targets = batch  # we don't need the targets
+        reconstructed_input = self(
+            input_data
+        )  # calls the forward pass of the model
+        loss = self.loss_fn(reconstructed_input, input_data)
+        return loss, reconstructed_input
 
-    def compute_accuracy(
-        self, logits: torch.tensor, targets: torch.tensor
+    def compute_reconstruction_similarity(
+        self, input: torch.tensor, reconstructed_input: torch.tensor
     ) -> int:
-        """Computes accuracy given the logits and target labels.
+        """Computes similarity between input img and recons. output.
 
         Parameters
         ----------
-        logits : torch.tensor
-            Scores produced by passing the input data to the model.
-        targets : torch.tensor
-            True labels of the data points.
+        input : torch.tensor
+            input batch image.
+        reconstructed_input : torch.tensor
+            output batch image reconstucted by the autoencoder.
 
         Returns
         -------
         int
-            The accuracy score.
+            The similarity score.
         """
-        probs = nn.functional.softmax(logits, 0)
-        preds = torch.argmax(probs, 1)
-        return (preds == targets).sum().item() / len(targets)
+        similarity = torch.abs(input - reconstructed_input)
+        similarity = similarity.sum()
+        return similarity
 
     def training_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -159,7 +158,7 @@ class ConvAutoEncoder(BaseModel):
         torch.Tensor
             loss produced by the loss function.
         """
-        loss, logits = self._generic_step(batch, batch_idx)
+        loss, reconstructed_input = self._generic_step(batch, batch_idx)
         self.log("train_loss", loss)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
@@ -182,11 +181,14 @@ class ConvAutoEncoder(BaseModel):
         torch.Tensor
             loss produced by the loss function.
         """
-        loss, logits = self._generic_step(batch, batch_idx)
-        input_data, targets = batch
-        val_acc = self.compute_accuracy(logits, input_data)
+        loss, reconstructed_input = self._generic_step(batch, batch_idx)
+        input_data, _ = batch
+        val_metric = self.compute_reconstruction_similarity(
+            reconstructed_input, input_data
+        )
         self.log("val_loss", loss)
-        self.log("val_acc", val_acc)
+        self.log("val_acc", val_metric)
+        return val_metric
 
     def test_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -205,11 +207,13 @@ class ConvAutoEncoder(BaseModel):
         torch.Tensor
             loss produced by the loss function.
         """
-        loss, logits = self._generic_step(batch, batch_idx)
-        input_data, targets = batch
-        test_acc = self.compute_accuracy(logits, input_data)
+        loss, reconstructed_input = self._generic_step(batch, batch_idx)
+        input_data, _ = batch
+        test_metric = self.compute_reconstruction_similarity(
+            reconstructed_input, input_data
+        )
         self.log("test_loss", loss)
-        self.log("test_acc", test_acc)
+        self.log("test_acc", test_metric)
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
@@ -226,17 +230,15 @@ class ConvAutoEncoder(BaseModel):
         """
         # print(batch_images.shape)
 
-        z_x = self.encoder(batch_images)
-        print("shape of code: ", z_x.shape)
-        logits = self.decoder(z_x)
+        bottleneck = self.encoder(batch_images)
+        reconstructed_input = self.decoder(bottleneck)
 
-        return logits
+        return reconstructed_input
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     hparams = {
-        "num_classes": 31,
         "loss": "MSELoss",
         "optimizer": "adam",
         "num_channels": 3,
@@ -244,9 +246,12 @@ if __name__ == "__main__":
     model = ConvAutoEncoder(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((16, 3, 100, 100))
-    label = torch.randint(0, 31, (16,))
-    print(model(img).shape)
+    img = torch.rand((16, 3, 100, 100)).to(device)
+    labels = torch.randint(0, 31, (16,)).to(device)
+    output = torch.rand((16, 3, 100, 100)).to(device)
 
-    loss = model.training_step((img, label), None)
+    loss = model.training_step((img, labels), None)
     print(loss)
+
+    similarity = model.compute_reconstruction_similarity(img, img)
+    print(similarity)
