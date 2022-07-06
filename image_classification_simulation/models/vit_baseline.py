@@ -96,12 +96,15 @@ class ViT(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
+        input_data, targets = batch
+        train_acc = self.compute_accuracy(logits, targets)
         self.log("train_loss", loss)
+        self.log("train_acc", train_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
         # this function is required,
         # as the loss returned here is used for backprop
-        return loss
+        return {"loss": loss, "acc": train_acc}
 
     def validation_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -121,12 +124,15 @@ class ViT(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
-        self.log("train_loss", loss)
+        input_data, targets = batch
+        val_acc = self.compute_accuracy(logits, targets)
+        self.log("val_loss", loss)
+        self.log("val_acc", val_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
         # this function is required,
         # as the loss returned here is used for backprop
-        return loss
+        return val_acc
 
     def test_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -164,8 +170,10 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        z_x = self.feature_extractor(batch_images, return_tensors="pt")
-        z_x = self.vit(pixel_values=z_x["pixel_values"])
+        batch_images = list(batch_images)
+        z_x = self.feature_extractor(images=batch_images, return_tensors="pt")
+        pixel_values = z_x["pixel_values"]
+        z_x = self.vit(pixel_values)
         logits = z_x.logits
 
         return logits
@@ -173,12 +181,16 @@ class ViT(BaseModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"loss": "CrossEntropyLoss", "pretrained": True, "num_classes": 31}
+    hparams = {
+        "loss": "CrossEntropyLoss",
+        "pretrained": True,
+        "num_classes": 31,
+    }
     model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((100, 100, 3)).to(device)
-    label = torch.randint(0, 31, (1,)).to(device)
+    img = torch.rand((16, 3, 224, 224)).to(device)
+    label = torch.randint(0, 31, (16,)).to(device)
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
