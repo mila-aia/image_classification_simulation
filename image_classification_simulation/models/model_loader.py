@@ -2,8 +2,12 @@ import logging
 from image_classification_simulation.models.my_model import MyModel
 from image_classification_simulation.models.resnet_baseline import Resnet
 from image_classification_simulation.models.vit_baseline import ViT
-from image_classification_simulation.models.classic_cnn_baseline import ClassicCNN
-
+from image_classification_simulation.models.classic_cnn_baseline import (
+    ClassicCNN,
+)
+from image_classification_simulation.models.protonet import (
+    PrototypicalNetworks,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +35,8 @@ def load_model(hyper_params: dict):  # pragma: no cover
         model_class = ViT
     elif architecture == "classic-cnn":
         model_class = ClassicCNN
+    elif architecture == "protonet":
+        model_class = PrototypicalNetworks
     else:
         raise ValueError("architecture {} not supported".format(architecture))
     logger.info("selected architecture: {}".format(architecture))
