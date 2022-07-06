@@ -1,1 +1,1 @@
-main --data ../data/amazon/images --output ./output --config ./config.yaml --start-from-scratch --gpus 0
+main --data ../data/domain_adaptation_images/amazon/images --output ./output --config ./config.yaml --start-from-scratch --gpus 0
