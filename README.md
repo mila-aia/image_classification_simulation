@@ -1,81 +1,47 @@
 # image_classification_simulation
 
 
-Simulation project to classify user images into a catalog of existing classes.
-
+This project implements a set of tools and models to perform multiclass classification of images.
 
 * Free software: MIT license
 
+## Setup
 
+### Clone the repository:
 
-## Instructions to setup the project
+    git clone https://github.com/mila-aia/image_classification_simulation.git
 
 ### Install the dependencies:
-(remember to activate the virtual env if you want to use one)
-Add new dependencies (if needed) to setup.py.
+(it is strongly recommended to create and/or activate a virtual environment before this step)
 
     pip install -e .
 
-### Add git:
+## Documentation
 
-    git init
+### Datasets
 
-### Setup pre-commit hooks:
-These hooks will:
-* validate flake8 before any commit
-* check that jupyter notebook outputs have been stripped
 
-    cd .git/hooks/ && ln -s ../../config/hooks/pre-commit . && cd -
 
-### Commit the code
+### Models
 
-    git add .
-    git commit -m 'first commit'
+#### Simple CNN baseline from scratch:
 
-### Link github to your local repository
-Go on github and follow the instructions to create a new project.
-When done, do not add any file, and follow the instructions to
-link your local git to the remote project, which should look like this:
-(PS: these instructions are reported here for your convenience.
-We suggest to also look at the GitHub project page for more up-to-date info)
+Simple image classification architecture that is a succession of convolutional layers and max pooling layers. It ends with a fully connected linear layer.
+* Implemented in the _ClassicCNN_ class.
 
-    git remote add origin git@github.com:alzaia/image_classification_simulation.git
-    git branch -M main
-    git push -u origin main
+#### ResNet baseline with transfer learning:
 
-### Setup Continuous Integration
+Pre-trained ResNet18 architecture that is fine-tuned on a new task (dataset).
+* Implemented in the _ResNet_ class.
 
-Continuous integration will run the following:
-- Unit tests under `tests`.
-- End-to-end test under `exmaples/local`.
-- `flake8` to check the code syntax.
-- Checks on documentation presence and format (using `sphinx`).
+#### Vision transformer (ViT) baseline with transfer learning:
 
-We support the following Continuous Integration providers.
-Check the following instructions for more details.
+Pre-trained ViT for image classification from HuggingFace, that is fine-tuned on a new task (dataset).
 
-#### GitHub Actions
+#### Few shot learning
 
-Github actions are already configured in `.github/workflows/tests.yml`.
-Github actions are already enabled by default when using Github, so, when
-pushing to github, they will be executed automatically for pull requests to
-`main` and to `develop`.
+#### Clustering on top of representation learning
 
-#### Travis
-
-Travis is already configured in (`.travis.yml`).
-
-To enable it server-side, just go to https://travis-ci.com/account/repositories and click
-` Manage repositories on GitHub`. Give the permission to run on the git repository you just created.
-
-Note, the link for public project may be https://travis-ci.org/account/repositories .
-
-#### Azure
-
-Azure Continuous Integration is already configured in (`.azure_pipeline.yml`).
-
-To enable it server-side, just in azure and select `.azure_pipeline.yml` as the 
-configuration one for Continuous Integration.
 
 ## Running the code
 
@@ -104,14 +70,6 @@ For example, to run on your local machine without Orion:
     cd examples/local
     sh run.sh
 
-This will run a simple MLP on a simple toy task: sum 5 float numbers.
-You should see an almost perfect loss of 0 after a few epochs.
-
-Note you have two new folders now:
-* output: contains the models and a summary of the results.
-* mlruns: produced by mlflow, contains all the data for visualization.
-You can run mlflow from this folder (`examples/local`) by running
-`mlflow ui`.
 
 #### Run on a remote cluster (with Slurm)
 
