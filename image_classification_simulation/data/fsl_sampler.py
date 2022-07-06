@@ -4,32 +4,40 @@ from typing import List, Tuple, Iterator
 import torch
 from torch import Tensor
 from torch.utils.data import Sampler
+from torch.utils.data import DataLoader
 
-from easyfsl.datasets import FewShotDataset
+# from easyfsl.datasets import FewShotDataset
 
 
 class TaskSampler(Sampler):
     """
-    Samples batches in the shape of few-shot classification tasks. At each iteration, it will sample
-    n_way classes, and then sample support and query images from these classes.
+    Samples batches in the shape of few-shot classification tasks.
+    At each iteration, it will sample n_way classes, and
+    then sample support and query images from these classes.
     """
 
     def __init__(
         self,
-        dataset: FewShotDataset,
+        dataset: DataLoader,
         n_way: int,
         n_shot: int,
         n_query: int,
         n_tasks: int,
     ):
-        """
-        Args:
-            dataset: dataset from which to sample classification tasks. Must have a field 'label': a
-                list of length len(dataset) containing containing the labels of all images.
-            n_way: number of classes in one task
-            n_shot: number of support images for each class in one task
-            n_query: number of query images for each class in one task
-            n_tasks: number of tasks to sample
+        """Initializes the sampler.
+
+        Parameters
+        ----------
+        dataset : DataLoader
+            The dataset to sample from.
+        n_way : int
+            The number of classes per episode.
+        n_shot : int
+            The number of support images per class.
+        n_query : int
+            The number of query images per class.
+        n_tasks : int
+            The number of episodes to sample.
         """
         super().__init__(data_source=None)
         self.n_way = n_way
@@ -49,18 +57,19 @@ class TaskSampler(Sampler):
 
     def __iter__(self) -> Iterator[List[int]]:
         for _ in range(self.n_tasks):
-            yield torch.cat(
-                [
-                    # pylint: disable=not-callable
-                    torch.tensor(
-                        random.sample(
-                            self.items_per_label[label], self.n_shot + self.n_query
-                        )
-                    )
-                    # pylint: enable=not-callable
-                    for label in random.sample(self.items_per_label.keys(), self.n_way)
-                ]
-            ).tolist()
+            s = []
+            sampled_labels = random.sample(
+                self.items_per_label.keys(), self.n_way
+            )
+            for label in sampled_labels:
+                # samples = random.sample(self.items_per_label[label], self.n_shot + self.n_query)
+                samples = random.choices(
+                    population=self.items_per_label[label],
+                    k=self.n_shot + self.n_query,
+                )
+                samples = torch.tensor(samples)
+                s.append(samples)
+            yield torch.cat(s).tolist()
 
     def episodic_collate_fn(
         self, input_data: List[Tuple[Tensor, int]]
@@ -68,19 +77,18 @@ class TaskSampler(Sampler):
         """
         Collate function to be used as argument for the collate_fn parameter of episodic
             data loaders.
-        Args:
-            input_data: each element is a tuple containing:
-                - an image as a torch Tensor
-                - the label of this image
-        Returns:
-            tuple(Tensor, Tensor, Tensor, Tensor, list[int]): respectively:
-                - support images,
-                - their labels,
-                - query images,
-                - their labels,
-                - the dataset class ids of the class sampled in the episode
-        """
 
+        Parameters
+        ----------
+        input_data : List[Tuple[Tensor, int]]
+            A list of tuples containing the data and the label.
+
+        Returns
+        -------
+        Tuple[Tensor, Tensor, Tensor, Tensor, List[int]]
+            A tuple containing the support images, the support labels, the query images, the query labels,
+            and the list of labels.
+        """
         true_class_ids = list({x[1] for x in input_data})
 
         all_images = torch.cat([x[0].unsqueeze(0) for x in input_data])
@@ -96,7 +104,9 @@ class TaskSampler(Sampler):
         support_images = all_images[:, : self.n_shot].reshape(
             (-1, *all_images.shape[2:])
         )
-        query_images = all_images[:, self.n_shot :].reshape((-1, *all_images.shape[2:]))
+        query_images = all_images[:, self.n_shot :].reshape(
+            (-1, *all_images.shape[2:])
+        )
         support_labels = all_labels[:, : self.n_shot].flatten()
         query_labels = all_labels[:, self.n_shot :].flatten()
 
