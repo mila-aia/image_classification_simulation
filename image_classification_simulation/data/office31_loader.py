@@ -99,9 +99,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
                 root=self.data_dir, transform=self.train_set_transformation
             )
 
-            n_val = int(
-                np.floor(self.train_test_split * len(self.train_set))
-            )
+            n_val = int(np.floor(self.train_test_split * len(self.train_set)))
 
             n_train = len(self.train_set) - n_val
 
@@ -277,7 +275,9 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8, "image_size": 200}
-    office31_loader = Office31Loader("./examples/data/domain_adaptation_images/amazon/images", args)
+    office31_loader = Office31Loader(
+        "./examples/data/domain_adaptation_images/amazon/images", args
+    )
     office31_loader.setup(stage="fit")
     i = iter(office31_loader.train_set.dataset)
     img, label = next(i)
