@@ -39,6 +39,18 @@ def show_grid_images(
 def dataloader_to_images(
     dataloader: DataLoader,
 ) -> typing.Union[typing.List[torch.Tensor], list]:
+    """Convert a dataloader to a list of images.
+
+    Parameters
+    ----------
+    dataloader : DataLoader
+        dataloader to convert to a list of images
+
+    Returns
+    -------
+    typing.Union[typing.List[torch.Tensor], list]
+        list of images and labels
+    """
     images, labels = [], []
     for batch_images, batch_labels in dataloader:
         images.extend(batch_images.detach().cpu())
@@ -49,6 +61,15 @@ def dataloader_to_images(
 def show_images_in_clusters(
     images: typing.List[torch.Tensor], predicted_clusters: np.ndarray
 ):
+    """Show images in clusters.
+
+    Parameters
+    ----------
+    images : typing.List[torch.Tensor]
+        list of images
+    predicted_clusters : np.ndarray
+        predicted clusters indices
+    """
     num_clusters = np.unique(predicted_clusters)
     for num in num_clusters:
         print(
@@ -61,7 +82,7 @@ def show_images_in_clusters(
 
 
 class Clustering:
-    """The class does clustering with different algorithms"""
+    """The class does clustering with different algorithms."""
 
     def __init__(self, hparams: dict):
         """Initialize the class.
