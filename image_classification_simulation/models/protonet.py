@@ -2,10 +2,8 @@ import torch
 import typing
 from torch import nn
 from torchvision.models import resnet18
-from image_classification_simulation.models.my_model import MyModel
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
-from image_classification_simulation.utils.hp_utils import check_and_log_hp
 
 
 class PrototypicalNetworks(BaseModel):
@@ -13,14 +11,14 @@ class PrototypicalNetworks(BaseModel):
 
     def __init__(self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]):
         super(PrototypicalNetworks, self).__init__()
-        # check_and_log_hp(["size"], hyper_params)
         self.save_hyperparameters(
             hyper_params
         )  # they will become available via model.hparams
 
         self.loss_fn = load_loss(hyper_params)
 
-        # temporarily hard coded resnet18 it should be specified in the hyper_params
+        # temporarily hard coded resnet18
+        # it should be specified in the hyper_params
         self.backbone = resnet18(pretrained=True)
         self.backbone.fc = nn.Flatten()
 
@@ -54,7 +52,8 @@ class PrototypicalNetworks(BaseModel):
 
     def compute_accuracy(self, scores, query_labels) -> int:
         """
-        Returns the number of correct predictions of query labels, and the total number of predictions.
+        Returns the number of correct predictions of query labels,
+        and the total number of predictions.
         """
         preds = torch.max(
             scores.detach().data,
@@ -171,7 +170,8 @@ class PrototypicalNetworks(BaseModel):
         -------
         dict
             loss produced by the loss function.
-            correct and total are the number of correct predictions and the total number of predictions.
+            correct and total are the number of correct predictions
+            and the total number of predictions.
         """
         loss, scores = self._generic_step(batch, batch_idx)
         query_labels = batch[3]
@@ -193,9 +193,11 @@ class PrototypicalNetworks(BaseModel):
         z_support = self.backbone.forward(support_images)
         z_query = self.backbone.forward(query_images)
 
-        # Infer the number of different classes from the labels of the support set
+        # Infer the number of different classes
+        # from the labels of the support set
         n_way = len(torch.unique(support_labels))
-        # Prototype i is the mean of all instances of features corresponding to labels == i
+        # Prototype i is the mean of all instances of
+        # features corresponding to labels == i
         self.z_proto = torch.cat(
             [
                 z_support[torch.nonzero(support_labels == label)].mean(0)
@@ -206,7 +208,6 @@ class PrototypicalNetworks(BaseModel):
         # Compute the euclidean distance from queries to prototypes
         dists = torch.cdist(z_query, self.z_proto)
 
-        # And here is the super complicated operation to transform those distances into classification scores!
         scores = -dists
         return scores
 
@@ -217,8 +218,11 @@ if __name__ == "__main__":
         "num_workers": 2,
         "batch_size": 32,
         "n_way": 31,
-        "n_shot": 10,  # with high number of classes we can't sample enough samples
-        "n_query": 10,  # use lower number of samples for now until a smarter data spliting is devised
+        # with high number of classes we can't sample enough samples
+        "n_shot": 10,
+        # use lower number of samples for now
+        # until a smarter data spliting is devised
+        "n_query": 10,
         "num_training_episodes": 400,
         "num_eval_tasks": 50,
     }

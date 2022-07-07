@@ -62,7 +62,9 @@ class TaskSampler(Sampler):
                 self.items_per_label.keys(), self.n_way
             )
             for label in sampled_labels:
-                # samples = random.sample(self.items_per_label[label], self.n_shot + self.n_query)
+                # samples = random.sample(
+                # self.items_per_label[label], self.n_shot + self.n_query
+                # )
                 samples = random.choices(
                     population=self.items_per_label[label],
                     k=self.n_shot + self.n_query,
@@ -75,8 +77,8 @@ class TaskSampler(Sampler):
         self, input_data: List[Tuple[Tensor, int]]
     ) -> Tuple[Tensor, Tensor, Tensor, Tensor, List[int]]:
         """
-        Collate function to be used as argument for the collate_fn parameter of episodic
-            data loaders.
+        Collate function to be used as argument for
+        the collate_fn parameter of episodic data loaders.
 
         Parameters
         ----------
@@ -86,8 +88,8 @@ class TaskSampler(Sampler):
         Returns
         -------
         Tuple[Tensor, Tensor, Tensor, Tensor, List[int]]
-            A tuple containing the support images, the support labels, the query images, the query labels,
-            and the list of labels.
+            A tuple containing the support images, the support labels,
+            the query images, the query labels, and the list of labels.
         """
         true_class_ids = list({x[1] for x in input_data})
 
