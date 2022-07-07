@@ -3,10 +3,11 @@ batch_size: 16
 optimizer: adamW
 loss: CrossEntropyLoss
 patience: 5
+image_size: 224
 lr: 0.0003
 architecture: vit
 pretrained: False
-max_epoch: 2
+max_epoch: 20
 exp_name: vit_test_exp
 # dataset
 data: Office31

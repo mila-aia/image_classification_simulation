@@ -170,10 +170,10 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        batch_images = list(batch_images)
-        z_x = self.feature_extractor(images=batch_images, return_tensors="pt")
-        pixel_values = z_x["pixel_values"]
-        z_x = self.vit(pixel_values)
+        # batch_images = list(batch_images)
+        # z_x = self.feature_extractor(images=batch_images, return_tensors="pt")
+        # pixel_values = z_x["pixel_values"]
+        z_x = self.vit(batch_images)
         logits = z_x.logits
 
         return logits
