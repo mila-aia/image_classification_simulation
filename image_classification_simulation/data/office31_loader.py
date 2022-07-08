@@ -93,7 +93,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         test_size : float, optional
             Fraction of the dataset to be used for testing, by default 0.1
         """
-
         n_val = int(np.floor(self.train_test_split * len(self.dataset)))
         n_test = int(np.floor(self.train_test_split * len(self.dataset)))
 
