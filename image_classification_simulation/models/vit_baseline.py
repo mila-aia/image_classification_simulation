@@ -160,6 +160,7 @@ class ViT(BaseModel):
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
+
         Parameters
         ----------
         batch_images : torch.Tensor
