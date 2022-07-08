@@ -25,10 +25,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         hyper_params : typing.Dict[typing.AnyStr, typing.Any]
             Hyper-parameters relevant to the dataloader module.
         """
-        if "num_unique_labels" in hyper_params:
-            hyper_params["num_classes"] = self.num_unique_labels
-        else:
-            self.num_unique_labels = 31
         if "num_workers" in hyper_params:
             self.num_workers = hyper_params["num_workers"]
         else:
@@ -77,6 +73,14 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             ]
         )
 
+        self.dataset = ImageFolder(
+            root=self.data_dir, transform=self.train_set_transformation
+        )
+
+        # get number of class from ImageFolder object
+        self.num_classes = len(self.dataset.classes)
+        hyper_params["num_classes"] = self.num_classes
+
     def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
 
@@ -89,17 +93,14 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         test_size : float, optional
             Fraction of the dataset to be used for testing, by default 0.1
         """
-        dataset = ImageFolder(
-            root=self.data_dir, transform=self.train_set_transformation
-        )
 
-        n_val = int(np.floor(self.train_test_split * len(dataset)))
-        n_test = int(np.floor(self.train_test_split * len(dataset)))
+        n_val = int(np.floor(self.train_test_split * len(self.dataset)))
+        n_test = int(np.floor(self.train_test_split * len(self.dataset)))
 
-        n_train = len(dataset) - n_val - n_test
+        n_train = len(self.dataset) - n_val - n_test
 
         self.train_set, self.val_set, self.test_set = random_split(
-            dataset, [n_train, n_val, n_test]
+            self.dataset, [n_train, n_val, n_test]
         )
 
     def train_dataloader(self) -> DataLoader:
