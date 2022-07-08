@@ -6,8 +6,8 @@ patience: 5
 lr: 0.0003
 architecture: vit
 pretrained: False
-max_epoch: 2
-exp_name: vit_test_exp
+max_epoch: 5
+exp_name: vit_training
 # dataset
 data: Office31
 img_size: 224
