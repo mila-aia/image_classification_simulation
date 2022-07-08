@@ -269,7 +269,11 @@ class ClassicCNN(BaseModel):
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"num_classes": 10, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {
+        "num_classes": 10,
+        "loss": "CrossEntropyLoss",
+        "pretrained": True,
+    }
     model = ClassicCNN(hparams).to(device)
     print(model)
     # generate a random image to test the module
