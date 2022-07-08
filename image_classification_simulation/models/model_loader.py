@@ -1,4 +1,7 @@
 import logging
+from image_classification_simulation.models.autoencoder_baseline import (
+    ConvAutoEncoder,
+)
 from image_classification_simulation.models.my_model import MyModel
 from image_classification_simulation.models.resnet_baseline import Resnet
 from image_classification_simulation.models.vit_baseline import ViT
@@ -8,6 +11,7 @@ from image_classification_simulation.models.classic_cnn_baseline import (
 from image_classification_simulation.models.protonet import (
     PrototypicalNetworks,
 )
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +41,8 @@ def load_model(hyper_params: dict):  # pragma: no cover
         model_class = ClassicCNN
     elif architecture == "protonet":
         model_class = PrototypicalNetworks
+    elif architecture == "conv_ae":
+        model_class = ConvAutoEncoder
     else:
         raise ValueError("architecture {} not supported".format(architecture))
     logger.info("selected architecture: {}".format(architecture))

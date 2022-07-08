@@ -86,7 +86,12 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             ]
         )
 
-    def setup(self, valid_size: float = 0.1, test_size: float = 0.1):
+    def setup(
+        self,
+        stage: str = "fit",
+        valid_size: float = 0.1,
+        test_size: float = 0.1,
+    ):
         """Parses and splits all samples across the train/valid/test parsers.
 
         Parameters
@@ -98,7 +103,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         test_size : float, optional
             Fraction of the dataset to be used for testing, by default 0.1
         """
-
         dataset = ImageFolder(
             root=self.data_dir, transform=self.train_set_transformation
         )
@@ -277,7 +281,7 @@ if __name__ == "__main__":
     office31_loader = Office31Loader(
         "./examples/data/domain_adaptation_images/amazon/images", args
     )
-    office31_loader.setup()
+    office31_loader.setup(stage="fit")
     i = iter(office31_loader.train_set.dataset)
     img, label = next(i)
     trans = transforms.ToPILImage()
