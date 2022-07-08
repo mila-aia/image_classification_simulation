@@ -1,0 +1,23 @@
+# general
+batch_size: 6
+optimizer: adam
+loss: CrossEntropyLoss
+patience: 5
+architecture: protonet
+pretrained: True
+max_epoch: 99
+exp_name: protonet_test_exp
+freeze_feature_extractor: True
+num_workers: 2
+batch_size: 32
+n_way: 31
+# will crash with high number of n_shot and n_query
+# number of samples per batch are n_way * (n_shot + n_query)
+n_shot: 5
+n_query: 5
+num_training_episodes: 400
+num_eval_tasks: 50
+data: Office31_Fewshot
+# set to null to avoid setting a seed (can speed up GPU computation, but
+# results will not be reproducible)
+seed: 1234

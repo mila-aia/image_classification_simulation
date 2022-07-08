@@ -1,4 +1,5 @@
 from image_classification_simulation.data.office31_loader import (
+    Office31FewshotLoader,
     Office31LoaderViT,
     Office31Loader,
 )
@@ -33,6 +34,8 @@ def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
         return OmniglotLoader(data_dir, hyper_params)
     elif hyper_params["data"] == "Office31":
         return Office31Loader(data_dir, hyper_params)
+    elif hyper_params["data"] == "Office31_Fewshot":
+        return Office31FewshotLoader(data_dir, hyper_params)
     elif hyper_params["data"] == "Office31ViT":
         return Office31LoaderViT(data_dir, hyper_params)
     elif hyper_params["data"] == "Flowers102":

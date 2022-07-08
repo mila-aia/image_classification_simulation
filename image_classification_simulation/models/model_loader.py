@@ -8,6 +8,9 @@ from image_classification_simulation.models.vit_baseline import ViT
 from image_classification_simulation.models.classic_cnn_baseline import (
     ClassicCNN,
 )
+from image_classification_simulation.models.protonet import (
+    PrototypicalNetworks,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -36,6 +39,8 @@ def load_model(hyper_params: dict):  # pragma: no cover
         model_class = ViT
     elif architecture == "classic-cnn":
         model_class = ClassicCNN
+    elif architecture == "protonet":
+        model_class = PrototypicalNetworks
     elif architecture == "conv_ae":
         model_class = ConvAutoEncoder
     else:
