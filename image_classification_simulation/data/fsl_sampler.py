@@ -121,11 +121,11 @@ class TaskSampler(Sampler):
         support_images = all_images[:, : self.n_shot].reshape(
             (-1, *all_images.shape[2:])
         )
-        query_images = all_images[:, self.n_shot :].reshape(
+        query_images = all_images[:, self.n_shot:].reshape(
             (-1, *all_images.shape[2:])
         )
         support_labels = all_labels[:, : self.n_shot].flatten()
-        query_labels = all_labels[:, self.n_shot :].flatten()
+        query_labels = all_labels[:, self.n_shot:].flatten()
 
         return (
             support_images,
