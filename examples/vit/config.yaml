@@ -9,7 +9,7 @@ pretrained: False
 max_epoch: 5
 exp_name: vit_training
 # dataset
-data: Office31
+data: Office31ViT
 img_size: 224
 num_channels: 3
 # set to null to avoid setting a seed (can speed up GPU computation, but

@@ -1,6 +1,5 @@
 import typing
 import numpy as np
-import torch
 import matplotlib.pyplot as plt
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -11,6 +10,7 @@ from transformers import ViTFeatureExtractor
 
 class Office31Loader(MyDataModule):  # pragma: no cover
     """Data module class.
+
     Prepares dataset parsers and instantiates data loaders.
     """
 
@@ -23,6 +23,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
     ):
         """Validates the hyperparameter config dictionary and\
              sets up internal attributes.
+
         Parameters
         ----------
         data_dir : string
@@ -63,6 +64,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
+
         Parameters
         ----------
         stage : string, optional
@@ -91,6 +93,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     def train_dataloader(self) -> DataLoader:
         """Creates the training dataloader using the training data parser.
+
         Returns
         -------
         DataLoader
@@ -107,6 +110,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     def val_dataloader(self) -> DataLoader:
         """Creates the validation dataloader using the validation data parser.
+
         Returns
         -------
         DataLoader
@@ -123,6 +127,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     def test_dataloader(self) -> DataLoader:
         """Creates the testing dataloader using the testing data parser.
+
         Returns
         -------
         DataLoader
