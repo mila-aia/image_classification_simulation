@@ -78,7 +78,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
                 root=self.data_dir, transform=self.train_set_transformation
             )
 
-            n_val = int(np.floor(0.1 * len(self.train_set)))
+            n_val = int(np.floor(self.train_test_split * len(self.train_set)))
+
             n_train = len(self.train_set) - n_val
 
             self.train_set, self.val_set = random_split(
