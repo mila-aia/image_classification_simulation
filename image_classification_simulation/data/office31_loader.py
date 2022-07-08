@@ -17,6 +17,13 @@ class Office31Loader(MyDataModule):  # pragma: no cover
     def validate_hparams(
         self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]
     ) -> None:
+        """Validates the hyper-parameters.
+
+        Parameters
+        ----------
+        hyper_params : typing.Dict[typing.AnyStr, typing.Any]
+            Hyper-parameters relevant to the dataloader module.
+        """
         if "n_way" in hyper_params:
             self.n_way = hyper_params["n_way"]
         else:

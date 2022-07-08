@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 class TaskSampler(Sampler):
     """
     Samples batches in the shape of few-shot classification tasks.
+
     At each iteration, it will sample n_way classes, and
     then sample support and query images from these classes.
     """
@@ -53,9 +54,23 @@ class TaskSampler(Sampler):
                 self.items_per_label[label] = [item]
 
     def __len__(self) -> int:
+        """Returns the number of tasks.
+
+        Returns
+        -------
+        int
+            The number of tasks.
+        """
         return self.n_tasks
 
     def __iter__(self) -> Iterator[List[int]]:
+        """Returns an iterator over the tasks.
+
+        Yields
+        ------
+        Iterator[List[int]]
+            An iterator over the tasks.
+        """
         for _ in range(self.n_tasks):
             s = []
             sampled_labels = random.sample(
@@ -77,8 +92,8 @@ class TaskSampler(Sampler):
         self, input_data: List[Tuple[Tensor, int]]
     ) -> Tuple[Tensor, Tensor, Tensor, Tensor, List[int]]:
         """
-        Collate function to be used as argument for
-        the collate_fn parameter of episodic data loaders.
+        Collate function to be used as argument for\
+            the collate_fn parameter of episodic data loaders.
 
         Parameters
         ----------

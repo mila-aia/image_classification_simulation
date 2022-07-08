@@ -51,10 +51,8 @@ class PrototypicalNetworks(BaseModel):
         return loss, scores
 
     def compute_accuracy(self, scores, query_labels) -> int:
-        """
-        Returns the number of correct predictions of query labels,
-        and the total number of predictions.
-        """
+        """Returns the number of correct predictions of query labels,\
+            and the total number of predictions."""
         preds = torch.max(
             scores.detach().data,
             1,
@@ -186,9 +184,7 @@ class PrototypicalNetworks(BaseModel):
         support_labels: torch.Tensor,
         query_images: torch.Tensor,
     ) -> torch.Tensor:
-        """
-        Predict query labels using labeled support images.
-        """
+        """Predict query labels using labeled support images."""
         # Extract the features of support and query images
         z_support = self.backbone.forward(support_images)
         z_query = self.backbone.forward(query_images)
