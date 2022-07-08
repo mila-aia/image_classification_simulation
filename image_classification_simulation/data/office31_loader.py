@@ -6,6 +6,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, random_split
 from image_classification_simulation.data.data_loader import MyDataModule
 from image_classification_simulation.data.fsl_sampler import TaskSampler
+from transformers import ViTFeatureExtractor
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
@@ -24,39 +25,24 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         hyper_params : typing.Dict[typing.AnyStr, typing.Any]
             Hyper-parameters relevant to the dataloader module.
         """
-        if "n_way" in hyper_params:
-            self.n_way = hyper_params["n_way"]
+        if "num_unique_labels" in hyper_params:
+            hyper_params["num_classes"] = self.num_unique_labels
         else:
-            self.n_way = 15
-        if "n_shot" in hyper_params:
-            self.n_shot = hyper_params["n_shot"]
-        else:
-            self.n_shot = 5
-        if "n_query" in hyper_params:
-            self.n_query = hyper_params["n_query"]
-        else:
-            self.n_query = 5
-        if "num_training_episodes" in hyper_params:
-            self.num_training_episodes = hyper_params["num_training_episodes"]
-        else:
-            self.num_training_episodes = 400
-        if "num_eval_tasks" in hyper_params:
-            self.num_eval_tasks = hyper_params["num_eval_tasks"]
-        else:
-            self.num_eval_tasks = 100
+            self.num_unique_labels = 31
         if "num_workers" in hyper_params:
             self.num_workers = hyper_params["num_workers"]
         else:
             self.num_workers = 1
-        if "image_size" in hyper_params:
-            self.image_size = hyper_params["image_size"]
-        else:
-            self.image_size = 300
-
+            print("Number of workers set to:", self.num_workers)
         if "train_test_split" in hyper_params:
             self.train_test_split = hyper_params["train_test_split"]
         else:
             self.train_test_split = 0.15
+        if "image_size" in hyper_params:
+            self.image_size = hyper_params["image_size"]
+        else:
+            self.image_size = 224
+            print("image size set to:", self.image_size)
 
     def __init__(
         self,
@@ -74,8 +60,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             Hyperparameters relevant to the dataloader module.
         """
         super().__init__(data_dir, hyper_params)
-        self.num_unique_labels = 31
-        hyper_params["num_classes"] = self.num_unique_labels
         self.validate_hparams(hyper_params)
 
         self.train_set_transformation = transforms.Compose(
@@ -93,12 +77,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             ]
         )
 
-    def setup(
-        self,
-        stage: str = "fit",
-        valid_size: float = 0.1,
-        test_size: float = 0.1,
-    ):
+    def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
 
         Parameters
@@ -175,8 +154,33 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         )
 
 
-class Office31_Fewshot_Loader(Office31Loader):
+class Office31FewshotLoader(Office31Loader):
     """Few shot Officee31 data loader class."""
+
+    def validate_hparams(
+        self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]
+    ) -> None:
+        super().validate_hparams(hyper_params)
+        if "n_way" in hyper_params:
+            self.n_way = hyper_params["n_way"]
+        else:
+            self.n_way = 15
+        if "n_shot" in hyper_params:
+            self.n_shot = hyper_params["n_shot"]
+        else:
+            self.n_shot = 5
+        if "n_query" in hyper_params:
+            self.n_query = hyper_params["n_query"]
+        else:
+            self.n_query = 5
+        if "num_training_episodes" in hyper_params:
+            self.num_training_episodes = hyper_params["num_training_episodes"]
+        else:
+            self.num_training_episodes = 400
+        if "num_eval_tasks" in hyper_params:
+            self.num_eval_tasks = hyper_params["num_eval_tasks"]
+        else:
+            self.num_eval_tasks = 100
 
     def setup(
         self,
@@ -281,11 +285,66 @@ class Office31_Fewshot_Loader(Office31Loader):
         )
 
 
+class Office31LoaderViT(Office31Loader):  # pragma: no cover
+    """Data module class.
+
+    Prepares dataset parsers and instantiates data loaders.
+    """
+
+    # We are going to use the amazon data
+    # (most similar to a catalog of online products)
+    def __init__(
+        self,
+        data_dir: typing.AnyStr,
+        hyper_params: typing.Dict[typing.AnyStr, typing.Any],
+    ):
+        """Validates the hyperparameter config dictionary and\
+             sets up internal attributes.
+
+        Parameters
+        ----------
+        data_dir : string
+            Directory path that the data will be downloaded and stored
+        hyper_params : dictionary
+            Hyperparameters relevant to the dataloader module.
+        """
+        super().__init__(data_dir, hyper_params)
+        self.validate_hparams(hyper_params)
+
+        self.feature_extractor = ViTFeatureExtractor.from_pretrained(
+            "google/vit-base-patch16-224-in21k"
+        )
+
+        self.train_set_transformation = transforms.Compose(
+            [
+                transforms.Resize(self.feature_extractor.size),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=self.feature_extractor.image_mean,
+                    std=self.feature_extractor.image_std,
+                ),
+            ]
+        )
+
+        self.val_set_transformation = transforms.Compose(
+            [
+                transforms.Resize(self.feature_extractor.size),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=self.feature_extractor.image_mean,
+                    std=self.feature_extractor.image_std,
+                ),
+            ]
+        )
+
+
 # import matplotlib as plt
 if __name__ == "__main__":
     # tests the dataloader module
-    args = {"batch_size": 8, "image_size": 200}
-    office31_loader = Office31Loader(
+    args = {"batch_size": 8}
+    office31_loader = Office31LoaderViT(
         "./examples/data/domain_adaptation_images/amazon/images", args
     )
     office31_loader.setup(stage="fit")
@@ -305,11 +364,11 @@ if __name__ == "__main__":
         "num_training_episodes": 400,
         "num_eval_tasks": 50,
     }
-    office_loader = Office31_Fewshot_Loader(
+    office_loader = Office31FewshotLoader(
         data_dir="./examples/data/domain_adaptation_images/amazon/images/",
         hyper_params=hparams,
     )
-    office_loader.setup(0.1, 0.1)
+    office_loader.setup(None, 0.1, 0.1)
     train_loader = office_loader.train_dataloader()
     val_loader = office_loader.val_dataloader()
     test_loader = office_loader.test_dataloader()

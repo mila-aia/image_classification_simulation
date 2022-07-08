@@ -222,6 +222,4 @@ if __name__ == "__main__":
         "num_training_episodes": 400,
         "num_eval_tasks": 50,
     }
-    convolutional_network = resnet18(pretrained=True)
-    convolutional_network.fc = nn.Flatten()
     model = PrototypicalNetworks(hparams).to(device)
