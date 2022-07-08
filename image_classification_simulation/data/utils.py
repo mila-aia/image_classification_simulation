@@ -1,4 +1,7 @@
-from image_classification_simulation.data.office31_loader import Office31Loader
+from image_classification_simulation.data.office31_loader import (
+    Office31LoaderViT,
+    Office31Loader,
+)
 from image_classification_simulation.data.omniglot_loader import OmniglotLoader
 from image_classification_simulation.data.mnist_loader import MNISTLoader
 from image_classification_simulation.data.flowers102_loader import (
@@ -30,6 +33,8 @@ def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
         return OmniglotLoader(data_dir, hyper_params)
     elif hyper_params["data"] == "Office31":
         return Office31Loader(data_dir, hyper_params)
+    elif hyper_params["data"] == "Office31ViT":
+        return Office31LoaderViT(data_dir, hyper_params)
     elif hyper_params["data"] == "Flowers102":
         return Flowers102Loader(data_dir, hyper_params)
     elif hyper_params["data"] == "MNIST":

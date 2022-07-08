@@ -102,6 +102,7 @@ class ViT(BaseModel):
         self.log("train_acc", train_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
+        print("train_acc", train_acc)
         # this function is required,
         # as the loss returned here is used for backprop
         return {"loss": loss, "acc": train_acc}
@@ -170,12 +171,7 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        # batch_images = list(batch_images)
-        # z_x = self.feature_extractor(
-        # images=batch_images, return_tensors="pt"
-        # )
-        # pixel_values = z_x["pixel_values"]
-        z_x = self.vit(batch_images)
+        z_x = self.vit(pixel_values=batch_images)
         logits = z_x.logits
 
         return logits
@@ -188,6 +184,7 @@ if __name__ == "__main__":
         "pretrained": True,
         "num_classes": 31,
     }
+    print(device)
     model = ViT(hparams).to(device)
     print(model)
     # generate a random image to test the module
