@@ -161,6 +161,13 @@ class Office31FewshotLoader(Office31Loader):
     def validate_hparams(
         self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]
     ) -> None:
+        """Validates the hyper-parameters.
+
+        Parameters
+        ----------
+        hyper_params : typing.Dict[typing.AnyStr, typing.Any]
+            Hyper-parameters relevant to the dataloader module.
+        """
         super().validate_hparams(hyper_params)
         if "n_way" in hyper_params:
             self.n_way = hyper_params["n_way"]
