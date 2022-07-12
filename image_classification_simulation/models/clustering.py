@@ -100,6 +100,9 @@ class Clustering:
         self.feature_ext.load_from_checkpoint(
             checkpoint_path=self.path_features_ext
         )
+        # have to set to eval here because batch norm
+        # has no meaning for one instance
+        self.feature_ext.eval()
 
         if hparams["clustering_alg"] == "MiniBatchKMeans":
             self.clustering_alg = MiniBatchKMeans(
@@ -142,6 +145,21 @@ class Clustering:
             features = features.detach().cpu().numpy()
             predicted_clusters.extend(self.clustering_alg.predict(features))
         return np.array(predicted_clusters)
+
+    def predict_one_image(self, image: torch.Tensor)->int:
+        """Predict the clusters for one image.
+
+        Parameters
+        ----------
+        image : torch.Tensor
+            image to predict the clusters
+        """
+        # model needs the image to be a batch of size 1
+        image = torch.unsqueeze(image,0)
+        features = self.feature_ext(image.to(self.device))
+        features = features.detach().cpu().numpy()
+        cluster_id = self.clustering_alg.predict(features)
+        return cluster_id.item()
 
     def visualize(self, dataloader: DataLoader):
         """Visualize the clusters.
