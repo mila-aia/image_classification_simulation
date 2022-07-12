@@ -34,10 +34,16 @@ class ClassicCNN(BaseModel):
         else:
             self.num_filters = 8
 
+        if "dropout_value" in hyper_params:
+            self.dropout_value = hyper_params["dropout_value"]
+        else:
+            self.dropout_value = 0.1
+
         # defining network layers
         self.flatten = nn.Flatten()
         self.activation = nn.ReLU()
         self.maxpooling = nn.MaxPool2d(2, 2)
+        self.dropout = nn.Dropout2d(self.dropout_value)
 
         self.conv1 = nn.Conv2d(
             hyper_params["num_channels"],
