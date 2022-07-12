@@ -1,9 +1,10 @@
 import typing
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from torch import device, cuda
 from torch.utils.data import DataLoader
-from torchvision.utils import make_grid, torch
+from torchvision.utils import make_grid
 from image_classification_simulation.models.model_loader import load_model
 from image_classification_simulation.data.office31_loader import Office31Loader
 from sklearn.cluster import MiniBatchKMeans
@@ -104,6 +105,11 @@ class Clustering:
         # has no meaning for one instance
         self.feature_ext.eval()
 
+        # last layer is usually used for task specific finetuning
+        # we can remove it here, since we need features only
+        layers = list(self.feature_ext.children())[-1]
+        self.feature_extractor = layers
+
         if hparams["clustering_alg"] == "MiniBatchKMeans":
             self.clustering_alg = MiniBatchKMeans(
                 n_clusters=hparams["num_clusters"],
@@ -176,7 +182,12 @@ class Clustering:
 
 
 if __name__ == "__main__":
-    hparams = {"num_workers": 2, "batch_size": 32, "image_size": 224}
+    hparams = {
+        "num_workers": 2,
+        "batch_size": 32,
+        "image_size": 224,
+        "train_test_split": 0.2,
+        }
     office_loader = Office31Loader(
         data_dir="./examples/data/domain_adaptation_images/amazon/images/",
         hyper_params=hparams,
@@ -184,35 +195,42 @@ if __name__ == "__main__":
     office_loader.setup("fit")
     train_loader = office_loader.train_dataloader()
     val_loader = office_loader.val_dataloader()
+    test_loader = office_loader.test_dataloader()
+
+    hparams = {
+        "clustering_alg": "MiniBatchKMeans",
+        "loss": "CrossEntropyLoss",
+        "pretrained": True,
+        "num_classes": 31,
+        "path_features_ext": "/network/projects/aia/img_classif_sim/vit/output/best_model/model.ckpt",
+        "architecture": "vit",
+        "num_clusters": 31,
+        "random_state": 0,
+        "clustering_batch_size": 32,
+        "reassignment_ratio": 0.05,
+    }
 
     # hparams = {
     #     "clustering_alg": "MiniBatchKMeans",
     #     "loss": "CrossEntropyLoss",
     #     "pretrained": True,
     #     "num_classes": 31,
-    #     "path_features_ext": "./output/best_model/model.ckpt",
-    #     "architecture": "vit",
+    #     "path_features_ext": "./examples/resnet/output/best_model/model.ckpt",
+    #     "architecture": "resnet",
     #     "num_clusters": 31,
     #     "random_state": 0,
     #     "clustering_batch_size": 32,
+    #     "size": 256,
     #     "reassignment_ratio": 0.05,
     # }
-    # clustering = Clustering(hparams)
-    # clustering.fit(train_loader)
-    # clustering.visualize(val_loader)
-    hparams = {
-        "clustering_alg": "MiniBatchKMeans",
-        "loss": "CrossEntropyLoss",
-        "pretrained": True,
-        "num_classes": 31,
-        "path_features_ext": "./examples/resnet/output/best_model/model.ckpt",
-        "architecture": "resnet",
-        "num_clusters": 31,
-        "random_state": 0,
-        "clustering_batch_size": 32,
-        "size": 256,
-        "reassignment_ratio": 0.05,
-    }
     clustering = Clustering(hparams)
-    clustering.fit(train_loader)
-    clustering.visualize(val_loader)
+    clustering.fit(val_loader)
+    # clustering.visualize(val_loader)
+    # img = torch.rand((3,224,224))
+    # cluster_ids = []
+    # for batch,l in val_loader:
+    #     for img in batch:
+    #         cluster_ids.append(clustering.predict_one_image(img))
+    # print(cluster_ids)
+
+    print(clustering.predict(val_loader))
