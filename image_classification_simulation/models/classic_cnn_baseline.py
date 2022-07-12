@@ -251,23 +251,35 @@ class ClassicCNN(BaseModel):
 
         # Block 1
         z_x = self.conv1(batch_images)
+        z_x = self.bn1(z_x)
         z_x = self.activation(z_x)
+        z_x = self.dropout(z_x)
         z_x = self.conv2(z_x)
+        z_x = self.bn2(z_x)
         z_x = self.activation(z_x)
+        z_x = self.dropout(z_x)
         z_x = self.maxpooling(z_x)
 
         # Block 2
         z_x = self.conv3(z_x)
+        z_x = self.bn3(z_x)
         z_x = self.activation(z_x)
+        z_x = self.dropout(z_x)
         z_x = self.conv4(z_x)
+        z_x = self.bn4(z_x)
         z_x = self.activation(z_x)
+        z_x = self.dropout(z_x)
         z_x = self.maxpooling(z_x)
 
         # Block 3
         z_x = self.conv5(z_x)
+        z_x = self.bn5(z_x)
         z_x = self.activation(z_x)
+        z_x = self.dropout(z_x)
         z_x = self.conv6(z_x)
+        z_x = self.bn6(z_x)
         z_x = self.activation(z_x)
+        z_x = self.dropout(z_x)
         z_x = self.maxpooling(z_x)
 
         # Fully connected block
