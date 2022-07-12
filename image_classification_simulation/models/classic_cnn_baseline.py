@@ -20,7 +20,8 @@ class ClassicCNN(BaseModel):
             A dictionary of hyperparameters
         """
         super(ClassicCNN, self).__init__()
-        check_and_log_hp(["num_classes"], hyper_params)
+        expected_hparams = {"num_classes", "img_size", "num_channels"}
+        check_and_log_hp(expected_hparams, hyper_params)
 
         self.save_hyperparameters(
             hyper_params
