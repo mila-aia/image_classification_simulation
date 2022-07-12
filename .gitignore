@@ -114,3 +114,6 @@ venv.bak/
 
 #Mac stuff
 .DS_Store
+
+#local debug files
+/debug
