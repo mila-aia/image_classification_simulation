@@ -87,6 +87,13 @@ class ClassicCNN(BaseModel):
             padding=1,
         )
 
+        self.bn1 = nn.BatchNorm2d(self.num_filters)
+        self.bn2 = nn.BatchNorm2d(self.num_filters * 2)
+        self.bn3 = nn.BatchNorm2d(self.num_filters * 4)
+        self.bn4 = nn.BatchNorm2d(self.num_filters * 4)
+        self.bn5 = nn.BatchNorm2d(self.num_filters * 8)
+        self.bn6 = nn.BatchNorm2d(self.num_filters * 8)
+
         def get_output_shape(model, image_dim):
             return model(torch.rand(*(image_dim))).data.shape
 
