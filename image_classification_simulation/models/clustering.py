@@ -6,7 +6,6 @@ from torch import device, cuda
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
 from image_classification_simulation.models.model_loader import load_model
-from image_classification_simulation.data.office31_loader import Office31Loader
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
 
@@ -152,7 +151,7 @@ class Clustering:
             predicted_clusters.extend(self.clustering_alg.predict(features))
         return np.array(predicted_clusters)
 
-    def predict_one_image(self, image: torch.Tensor)->int:
+    def predict_one_image(self, image: torch.Tensor) -> int:
         """Predict the clusters for one image.
 
         Parameters
@@ -161,7 +160,7 @@ class Clustering:
             image to predict the clusters
         """
         # model needs the image to be a batch of size 1
-        image = torch.unsqueeze(image,0)
+        image = torch.unsqueeze(image, 0)
         features = self.feature_ext(image.to(self.device))
         features = features.detach().cpu().numpy()
         cluster_id = self.clustering_alg.predict(features)
@@ -179,58 +178,3 @@ class Clustering:
         predicted_clusters = self.predict(dataloader)
         show_images_in_clusters(images, predicted_clusters)
         return predicted_clusters
-
-
-if __name__ == "__main__":
-    hparams = {
-        "num_workers": 2,
-        "batch_size": 32,
-        "image_size": 224,
-        "train_test_split": 0.2,
-        }
-    office_loader = Office31Loader(
-        data_dir="./examples/data/domain_adaptation_images/amazon/images/",
-        hyper_params=hparams,
-    )
-    office_loader.setup("fit")
-    train_loader = office_loader.train_dataloader()
-    val_loader = office_loader.val_dataloader()
-    test_loader = office_loader.test_dataloader()
-
-    hparams = {
-        "clustering_alg": "MiniBatchKMeans",
-        "loss": "CrossEntropyLoss",
-        "pretrained": True,
-        "num_classes": 31,
-        "path_features_ext": "/network/projects/aia/img_classif_sim/vit/output/best_model/model.ckpt",
-        "architecture": "vit",
-        "num_clusters": 31,
-        "random_state": 0,
-        "clustering_batch_size": 32,
-        "reassignment_ratio": 0.05,
-    }
-
-    # hparams = {
-    #     "clustering_alg": "MiniBatchKMeans",
-    #     "loss": "CrossEntropyLoss",
-    #     "pretrained": True,
-    #     "num_classes": 31,
-    #     "path_features_ext": "./examples/resnet/output/best_model/model.ckpt",
-    #     "architecture": "resnet",
-    #     "num_clusters": 31,
-    #     "random_state": 0,
-    #     "clustering_batch_size": 32,
-    #     "size": 256,
-    #     "reassignment_ratio": 0.05,
-    # }
-    clustering = Clustering(hparams)
-    clustering.fit(val_loader)
-    # clustering.visualize(val_loader)
-    # img = torch.rand((3,224,224))
-    # cluster_ids = []
-    # for batch,l in val_loader:
-    #     for img in batch:
-    #         cluster_ids.append(clustering.predict_one_image(img))
-    # print(cluster_ids)
-
-    print(clustering.predict(val_loader))
