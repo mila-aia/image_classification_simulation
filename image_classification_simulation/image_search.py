@@ -6,18 +6,18 @@ from PIL import Image
 from image_classification_simulation.models.clustering import Clustering
 
 
-class Image_similarity_search:
+class ImageSimilaritySearch:
     """Image similaarity search class."""
 
     def __init__(self, hparams: dict, DataModule: DataLoader) -> None:
-        """Initialize the Image_similarity_search class.
+        """Initialize the ImageSimilaritySearch class.
 
         Parameters
         ----------
         hparams : dict
-            Hyperparameters for the Image_similarity_search class.
+            Hyperparameters for the ImageSimilaritySearch class.
         DataModule : DataLoader
-            Dataset for the Image_similarity_search class.
+            Dataset for the ImageSimilaritySearch class.
         """
         self.clustering = Clustering(hparams)
 
@@ -37,7 +37,7 @@ class Image_similarity_search:
             self.load_cluster_ids_from_file(self.path_cluster_ids)
 
     def setup(self):
-        """Setup the Image_similarity_search class."""
+        """Setup the ImageSimilaritySearch class."""
         if os.path.exists(self.path_to_model):
             self.clustering.load_model_from_file(self.path_to_model)
         else:
