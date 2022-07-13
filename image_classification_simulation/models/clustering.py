@@ -8,13 +8,14 @@ from torchvision.utils import make_grid
 from image_classification_simulation.models.model_loader import load_model
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
-
+from joblib import dump, load
 
 def show_grid_images(
     images: typing.List[torch.Tensor],
     label: list,
     height: int = 8,
     width: int = 8,
+    save_path: str = None,
 ):
     """Show a grid of images.
 
@@ -28,12 +29,16 @@ def show_grid_images(
         image height, by default 8
     width : int, optional
         image width, by default 8
+    save_path : str, optional
+        path to save image, by default None
     """
     grid = make_grid(images)
     plt.figure(figsize=(height, width))
     plt.imshow(grid.permute(1, 2, 0))
     plt.title("cluster {}".format(label))
     plt.show()
+    if save_path is not None:
+        plt.savefig(save_path)
 
 
 def dataloader_to_images(
@@ -123,6 +128,10 @@ class Clustering:
                 n_clusters=hparams["num_clusters"]
             )
 
+    def get_inertia(self):
+        """Get the inertia of the clustering algorithm."""
+        return self.clustering_alg.inertia_
+
     def fit(self, dataloader: DataLoader):
         """Fit the clustering algorithm.
 
@@ -178,3 +187,23 @@ class Clustering:
         predicted_clusters = self.predict(dataloader)
         show_images_in_clusters(images, predicted_clusters)
         return predicted_clusters
+
+    def save_model_to_file(self, path: str):
+        """Save the model to a file.
+
+        Parameters
+        ----------
+        path : str
+            path to save the model
+        """
+        dump(self.clustering_alg, path)
+
+    def load_model_from_file(self, path: str):
+        """Load the model from a file.
+
+        Parameters
+        ----------
+        path : str
+            path to load the model
+        """
+        self.clustering_alg = load(path)
