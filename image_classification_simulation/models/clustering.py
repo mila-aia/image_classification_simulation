@@ -1,13 +1,14 @@
 import typing
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from torch import device, cuda
 from torch.utils.data import DataLoader
-from torchvision.utils import make_grid, torch
+from torchvision.utils import make_grid
 from image_classification_simulation.models.model_loader import load_model
-from image_classification_simulation.data.office31_loader import Office31Loader
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
+from joblib import dump, load
 
 
 def show_grid_images(
@@ -15,6 +16,7 @@ def show_grid_images(
     label: list,
     height: int = 8,
     width: int = 8,
+    save_path: str = None,
 ):
     """Show a grid of images.
 
@@ -28,12 +30,16 @@ def show_grid_images(
         image height, by default 8
     width : int, optional
         image width, by default 8
+    save_path : str, optional
+        path to save image, by default None
     """
     grid = make_grid(images)
     plt.figure(figsize=(height, width))
     plt.imshow(grid.permute(1, 2, 0))
     plt.title("cluster {}".format(label))
     plt.show()
+    if save_path is not None:
+        plt.savefig(save_path)
 
 
 def dataloader_to_images(
@@ -100,6 +106,14 @@ class Clustering:
         self.feature_ext.load_from_checkpoint(
             checkpoint_path=self.path_features_ext
         )
+        # have to set to eval here because batch norm
+        # has no meaning for one instance
+        self.feature_ext.eval()
+
+        # last layer is usually used for task specific finetuning
+        # we can remove it here, since we need features only
+        layers = list(self.feature_ext.children())[-1]
+        self.feature_extractor = layers
 
         if hparams["clustering_alg"] == "MiniBatchKMeans":
             self.clustering_alg = MiniBatchKMeans(
@@ -114,6 +128,10 @@ class Clustering:
                 # threshold=12.5,
                 n_clusters=hparams["num_clusters"]
             )
+
+    def get_inertia(self):
+        """Get the inertia of the clustering algorithm."""
+        return self.clustering_alg.inertia_
 
     def fit(self, dataloader: DataLoader):
         """Fit the clustering algorithm.
@@ -143,6 +161,21 @@ class Clustering:
             predicted_clusters.extend(self.clustering_alg.predict(features))
         return np.array(predicted_clusters)
 
+    def predict_one_image(self, image: torch.Tensor) -> int:
+        """Predict the clusters for one image.
+
+        Parameters
+        ----------
+        image : torch.Tensor
+            image to predict the clusters
+        """
+        # model needs the image to be a batch of size 1
+        image = torch.unsqueeze(image, 0)
+        features = self.feature_ext(image.to(self.device))
+        features = features.detach().cpu().numpy()
+        cluster_id = self.clustering_alg.predict(features)
+        return cluster_id.item()
+
     def visualize(self, dataloader: DataLoader):
         """Visualize the clusters.
 
@@ -156,45 +189,22 @@ class Clustering:
         show_images_in_clusters(images, predicted_clusters)
         return predicted_clusters
 
+    def save_model_to_file(self, path: str):
+        """Save the model to a file.
 
-if __name__ == "__main__":
-    hparams = {"num_workers": 2, "batch_size": 32, "image_size": 224}
-    office_loader = Office31Loader(
-        data_dir="./examples/data/domain_adaptation_images/amazon/images/",
-        hyper_params=hparams,
-    )
-    office_loader.setup("fit")
-    train_loader = office_loader.train_dataloader()
-    val_loader = office_loader.val_dataloader()
+        Parameters
+        ----------
+        path : str
+            path to save the model
+        """
+        dump(self.clustering_alg, path)
 
-    # hparams = {
-    #     "clustering_alg": "MiniBatchKMeans",
-    #     "loss": "CrossEntropyLoss",
-    #     "pretrained": True,
-    #     "num_classes": 31,
-    #     "path_features_ext": "./output/best_model/model.ckpt",
-    #     "architecture": "vit",
-    #     "num_clusters": 31,
-    #     "random_state": 0,
-    #     "clustering_batch_size": 32,
-    #     "reassignment_ratio": 0.05,
-    # }
-    # clustering = Clustering(hparams)
-    # clustering.fit(train_loader)
-    # clustering.visualize(val_loader)
-    hparams = {
-        "clustering_alg": "MiniBatchKMeans",
-        "loss": "CrossEntropyLoss",
-        "pretrained": True,
-        "num_classes": 31,
-        "path_features_ext": "./examples/resnet/output/best_model/model.ckpt",
-        "architecture": "resnet",
-        "num_clusters": 31,
-        "random_state": 0,
-        "clustering_batch_size": 32,
-        "size": 256,
-        "reassignment_ratio": 0.05,
-    }
-    clustering = Clustering(hparams)
-    clustering.fit(train_loader)
-    clustering.visualize(val_loader)
+    def load_model_from_file(self, path: str):
+        """Load the model from a file.
+
+        Parameters
+        ----------
+        path : str
+            path to load the model
+        """
+        self.clustering_alg = load(path)
