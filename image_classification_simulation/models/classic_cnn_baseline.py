@@ -237,6 +237,7 @@ class ClassicCNN(BaseModel):
         test_acc = self.compute_accuracy(logits, targets)
         self.log("test_loss", loss)
         self.log("test_acc", test_acc)
+        return test_acc
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
