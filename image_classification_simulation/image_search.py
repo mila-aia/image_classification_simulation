@@ -6,7 +6,16 @@ from PIL import Image
 from image_classification_simulation.models.clustering import Clustering
 
 class Image_similarity_search():
-    def __init__(self, hparams, DataModule) -> None:
+    def __init__(self, hparams: dict, DataModule: DataLoader) -> None:
+        """Initialize the Image_similarity_search class.
+
+        Parameters
+        ----------
+        hparams : dict
+            Hyperparameters for the Image_similarity_search class.
+        DataModule : DataLoader
+            Dataset for the Image_similarity_search class.
+        """
         self.clustering = Clustering(hparams)
 
         batch_size = hparams["batch_size"]
@@ -26,6 +35,7 @@ class Image_similarity_search():
             self.load_cluster_ids_from_file(self.path_cluster_ids)
 
     def setup(self):
+        """Setup the Image_similarity_search class."""
         if os.path.exists(self.path_to_model):
             self.clustering.load_model_from_file(self.path_to_model)
         else:
@@ -40,10 +50,24 @@ class Image_similarity_search():
         print('>>> setup completed successfully!')
 
     def save_cluster_ids_to_file(self, path='./cluster_ids.npy'):
+        """Save the cluster ids to a file.
+        
+        Parameters
+        ----------
+        path : str, optional
+            Path to the file. The default is './cluster_ids.npy'.
+        """
         np.save(path,self.dataset_cluster_ids)
         print('>>> saved cluster ids to file')
 
     def load_cluster_ids_from_file(self, path='./cluster_ids.npy'):
+        """Load the cluster ids from a file.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to the file. The default is './cluster_ids.npy'.
+        """
         self.dataset_cluster_ids = np.load(path)
         print('>>> loaded cluster ids from file')
 
