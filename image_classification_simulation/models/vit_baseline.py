@@ -1,6 +1,6 @@
 import torch
 import typing
-from transformers import ViTFeatureExtractor, ViTForImageClassification
+from transformers import ViTForImageClassification
 from image_classification_simulation.utils.hp_utils import check_and_log_hp
 from image_classification_simulation.models.optim import load_loss
 from image_classification_simulation.models.my_model import BaseModel
@@ -26,10 +26,6 @@ class ViT(BaseModel):
         )  # they will become available via model.hparams
 
         self.loss_fn = load_loss(hyper_params)
-        # load the feature extractor
-        self.feature_extractor = ViTFeatureExtractor.from_pretrained(
-            "google/vit-base-patch16-224-in21k"
-        )
 
         self.num_classes = hyper_params["num_classes"]
 
@@ -102,9 +98,6 @@ class ViT(BaseModel):
         self.log("train_acc", train_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
-        print("train_acc", train_acc)
-        # this function is required,
-        # as the loss returned here is used for backprop
         return {"loss": loss, "acc": train_acc}
 
     def validation_step(
@@ -129,10 +122,6 @@ class ViT(BaseModel):
         val_acc = self.compute_accuracy(logits, targets)
         self.log("val_loss", loss)
         self.log("val_acc", val_acc)
-        self.log("epoch", self.current_epoch)
-        self.log("step", self.global_step)
-        # this function is required,
-        # as the loss returned here is used for backprop
         return val_acc
 
     def test_step(
@@ -157,6 +146,7 @@ class ViT(BaseModel):
         test_acc = self.compute_accuracy(logits, targets)
         self.log("test_loss", loss)
         self.log("test_acc", test_acc)
+        return test_acc
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
