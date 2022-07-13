@@ -10,6 +10,7 @@ from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
 from joblib import dump, load
 
+
 def show_grid_images(
     images: typing.List[torch.Tensor],
     label: list,
