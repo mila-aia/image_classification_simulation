@@ -9,6 +9,7 @@ from image_classification_simulation.models.model_loader import load_model
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
 from joblib import dump, load
+from image_classification_simulation.models.model_loader import load_model
 
 
 def show_grid_images(
