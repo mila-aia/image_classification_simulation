@@ -1,13 +1,16 @@
 import os
-import typing
-import numpy as np
+import pandas as pd
 from torch.utils.data import DataLoader
 from PIL import Image
 from image_classification_simulation.models.clustering import Clustering
 
+# import typing
+# import numpy as np
+# from joblib import dump, load
+
 
 class ImageSimilaritySearch:
-    """Image similaarity search class."""
+    """Image similarity search class."""
 
     def __init__(self, hparams: dict, DataModule: DataLoader) -> None:
         """Initialize the ImageSimilaritySearch class.
@@ -15,14 +18,37 @@ class ImageSimilaritySearch:
         Parameters
         ----------
         hparams : dict
-            Hyperparameters for the ImageSimilaritySearch class.
+            Hyper-parameters for the ImageSimilaritySearch class.
         DataModule : DataLoader
             Dataset for the ImageSimilaritySearch class.
         """
+        self.path_to_model = hparams["path_to_model"]
+        self.path_cluster_ids = hparams["path_cluster_ids"]
+        batch_size = hparams["batch_size"]
+
+        if os.path.exists(self.path_cluster_ids):
+            self.load_cluster_ids_from_file(self.path_cluster_ids)
+            print(">>> Found cluster ids from file")
+
+        self.dataset_cluster_ids = None
         self.clustering = Clustering(hparams)
 
-        batch_size = hparams["batch_size"]
-        # dataset and trasnformations are the only
+        # for now we only initialize the model
+        # loading clustering alg with joblib is not working properly
+        # methods are not loaded properly
+        self.model_loaded = False
+        # if os.path.exists(self.path_to_model):
+        #     self.clustering.clustering_alg
+        #  = self.clustering.load_model_from_file(
+        #         self.path_to_model
+        #     )
+        #     self.model_loaded = True
+        #     print(">>> Found and loaded model from file")
+        # else:
+        #     self.model_loaded = False
+        #     print(">>> Initiated a new model!")
+
+        # dataset and transformations are the only
         # things we need from the DataModule
         self.image_dataloader = DataLoader(
             DataModule.dataset, batch_size=batch_size
@@ -30,47 +56,48 @@ class ImageSimilaritySearch:
 
         self.transformation = DataModule.train_set_transformation
 
-        self.path_to_model = hparams["path_to_model"]
-        self.path_cluster_ids = hparams["path_cluster_ids"]
-
-        if os.path.exists(self.path_cluster_ids):
-            self.load_cluster_ids_from_file(self.path_cluster_ids)
-
     def setup(self):
         """Setup the ImageSimilaritySearch class."""
-        if os.path.exists(self.path_to_model):
-            self.clustering.load_model_from_file(self.path_to_model)
-        else:
+        if self.model_loaded is False:
             self.clustering.fit(self.image_dataloader)
-            if os.path.exists(self.path_cluster_ids):
-                self.load_cluster_ids_from_file(self.path_cluster_ids)
-            else:
-                self.dataset_cluster_ids = self.clustering.predict(
-                    dataloader=self.image_dataloader
-                )
-                self.save_cluster_ids_to_file(self.path_cluster_ids)
+            self.clustering.save_model_to_file(self.path_to_model)
+
+        # cannot have the cluster ids loaded since the model cannot be used
+        # if self.dataset_cluster_ids is None:
+        self.dataset_cluster_ids = self.clustering.predict(
+            dataloader=self.image_dataloader
+        )
+        self.save_cluster_ids_to_file(self.path_cluster_ids)
+        # else:
+        #     self.load_cluster_ids_from_file(self.path_cluster_ids)
         print(">>> setup completed successfully!")
 
-    def save_cluster_ids_to_file(self, path="./cluster_ids.npy"):
+    def save_cluster_ids_to_file(self, path="./dataset_cluster_ids.csv"):
         """Save the cluster ids to a file.
 
         Parameters
         ----------
         path : str, optional
-            Path to the file. The default is './cluster_ids.npy'.
+            Path to the file. The default is "./dataset_cluster_ids.csv".
         """
-        np.save(path, self.dataset_cluster_ids)
+        self.dataset = pd.DataFrame(
+            self.image_dataloader.dataset.samples,
+            columns=["image_path", "class_label"],
+        )
+        self.dataset["cluster_id"] = self.dataset_cluster_ids
+        self.dataset.to_csv(path, index=False)
         print(">>> saved cluster ids to file")
 
-    def load_cluster_ids_from_file(self, path="./cluster_ids.npy"):
+    def load_cluster_ids_from_file(self, path="./dataset_cluster_ids.csv"):
         """Load the cluster ids from a file.
 
         Parameters
         ----------
         path : str, optional
-            Path to the file. The default is './cluster_ids.npy'.
+            Path to the file. The default is "./dataset_cluster_ids.csv".
         """
-        self.dataset_cluster_ids = np.load(path)
+        self.dataset = pd.read_csv(path)
+        self.dataset_cluster_ids = self.dataset["cluster_id"].values
         print(">>> loaded cluster ids from file")
 
     def predict_image_cluster(self, path) -> int:
@@ -85,7 +112,7 @@ class ImageSimilaritySearch:
         image = self.transformation(image)
         return self.clustering.predict_one_image(image)
 
-    def find_similar_images(self, path_to_image) -> typing.Tuple[list, list]:
+    def find_similar_images(self, path_to_image) -> pd.DataFrame:
         """Find similar images to a given image.
 
         Parameters
@@ -95,18 +122,9 @@ class ImageSimilaritySearch:
 
         Returns
         -------
-        similar_images : list
-            List of similar images.
-        similar_images_cluster_ids : list
-            List of similar images cluster ids.
+        pd.DataFrame
+            A DataFrame object containing similar images.
         """
         target_cluster_id = self.predict_image_cluster(path_to_image)
-        target_images = []
-        target_cluster_ids = []
-        for (image, class_label), cluster_id in zip(
-            self.image_dataloader.dataset, self.dataset_cluster_ids
-        ):
-            if cluster_id == target_cluster_id:
-                target_images.append(image)
-                target_cluster_ids.append(cluster_id)
-        return target_images, target_cluster_ids
+        query_indices = self.dataset["cluster_id"] == target_cluster_id
+        return self.dataset[query_indices]
