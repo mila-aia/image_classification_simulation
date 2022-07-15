@@ -1,5 +1,6 @@
 import typing
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -14,7 +15,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     Prepares dataset parsers and instantiates data loaders.
     """
-
     def validate_hparams(
         self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]
     ) -> None:
@@ -39,6 +39,10 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         else:
             self.image_size = 224
             print("image size set to:", self.image_size)
+        if "data_aug_prob" in hyper_params:
+            self.data_aug_prob = hyper_params["data_aug_prob"]
+        else:
+            self.data_aug_prob = 0.5
 
     def __init__(
         self,
@@ -58,10 +62,25 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         super().__init__(data_dir, hyper_params)
         self.validate_hparams(hyper_params)
 
+        self.data_aug_strategy = transforms.Compose(
+            [
+                transforms.RandomApply(
+                    torch.nn.ModuleList([
+                        transforms.ColorJitter(),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.RandomVerticalFlip(),
+                        transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2)),
+                        transforms.RandomRotation(degrees=(0, 180)),
+                        transforms.RandomInvert(),  
+                        transforms.RandomAutocontrast(),]),
+                        p=self.data_aug_prob),
+            ]
+        )
+
         self.train_set_transformation = transforms.Compose(
             [
-                transforms.RandomHorizontalFlip(),
                 transforms.Resize((self.image_size, self.image_size)),
+                self.data_aug_strategy,
                 transforms.ToTensor(),
             ]
         )
