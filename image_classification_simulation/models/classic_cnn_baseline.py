@@ -183,10 +183,13 @@ class ClassicCNN(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
+        input_data, targets = batch
+        train_acc = self.compute_accuracy(logits, targets)
         self.log("train_loss", loss)
+        self.log("train_acc", train_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
-        return loss
+        return {"loss": loss, "acc": train_acc}
 
     def validation_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -210,6 +213,7 @@ class ClassicCNN(BaseModel):
         val_acc = self.compute_accuracy(logits, targets)
         self.log("val_loss", loss)
         self.log("val_acc", val_acc)
+        return val_acc
 
     def test_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -233,6 +237,7 @@ class ClassicCNN(BaseModel):
         test_acc = self.compute_accuracy(logits, targets)
         self.log("test_loss", loss)
         self.log("test_acc", test_acc)
+        return test_acc
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
