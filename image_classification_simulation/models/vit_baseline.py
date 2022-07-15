@@ -35,9 +35,8 @@ class ViT(BaseModel):
 
         layers = list(self.vit.children())[:-1]
         self.feature_extractor = torch.nn.Sequential(*layers)
-        self.flatten = torch.nn.Flatten()
         num_target_classes = hyper_params["num_classes"]
-        dim_features = 768 # 3 channels * (16*16) patches in the ViT model
+        dim_features = 768  # 3 channels * (16*16) patches in the ViT model
         self.linear = torch.nn.Linear(dim_features, num_target_classes)
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
@@ -170,9 +169,7 @@ class ViT(BaseModel):
         """
         z_x = self.feature_extractor(batch_images)
         z_x = z_x["last_hidden_state"]
-        z_x = z_x[:,0,:] #taking the CLS token
-        z_x = self.flatten(z_x)
-        logits = self.linear(z_x) #MLP head
+        logits = self.linear(z_x[:,0,:]) #MLP head
         return logits
 
 
