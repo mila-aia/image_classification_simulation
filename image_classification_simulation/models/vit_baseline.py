@@ -33,6 +33,13 @@ class ViT(BaseModel):
             "google/vit-base-patch16-224-in21k", num_labels=self.num_classes
         )
 
+        layers = list(self.vit.children())[:-1]
+        self.feature_extractor = torch.nn.Sequential(*layers)
+        self.flatten = torch.nn.Flatten()
+        num_target_classes = hyper_params["num_classes"]
+        dim_features = 768 # 3 channels * (16*16) patches in the ViT model
+        self.linear = torch.nn.Linear(dim_features, num_target_classes)
+
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
 
@@ -161,9 +168,11 @@ class ViT(BaseModel):
         torch.Tensor
             Logit scores
         """
-        z_x = self.vit(pixel_values=batch_images)
-        logits = z_x.logits
-
+        z_x = self.feature_extractor(batch_images)
+        z_x = z_x["last_hidden_state"]
+        z_x = z_x[:,0,:] #taking the CLS token
+        z_x = self.flatten(z_x)
+        logits = self.linear(z_x) #MLP head
         return logits
 
 
