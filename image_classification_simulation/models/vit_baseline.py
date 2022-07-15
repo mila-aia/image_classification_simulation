@@ -169,7 +169,7 @@ class ViT(BaseModel):
         """
         z_x = self.feature_extractor(batch_images)
         z_x = z_x["last_hidden_state"]
-        logits = self.linear(z_x[:,0,:]) #MLP head
+        logits = self.linear(z_x[:, 0, :])  # MLP head
         return logits
 
 
