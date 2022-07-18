@@ -1,5 +1,6 @@
 import typing
 import numpy as np
+import torch
 import matplotlib.pyplot as plt
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
@@ -39,6 +40,10 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         else:
             self.image_size = 224
             print("image size set to:", self.image_size)
+        if "data_aug_prob" in hyper_params:
+            self.data_aug_prob = hyper_params["data_aug_prob"]
+        else:
+            self.data_aug_prob = 0.5
 
     def __init__(
         self,
@@ -58,10 +63,30 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         super().__init__(data_dir, hyper_params)
         self.validate_hparams(hyper_params)
 
+        self.data_aug_strategy = transforms.Compose(
+            [
+                transforms.RandomApply(
+                    torch.nn.ModuleList(
+                        [
+                            transforms.ColorJitter(),
+                            transforms.RandomHorizontalFlip(),
+                            transforms.RandomVerticalFlip(),
+                            transforms.GaussianBlur(
+                                kernel_size=(5, 9), sigma=(0.1, 2)
+                            ),
+                            transforms.RandomInvert(),
+                            transforms.RandomAutocontrast(),
+                        ]
+                    ),
+                    p=self.data_aug_prob,
+                ),
+            ]
+        )
+
         self.train_set_transformation = transforms.Compose(
             [
-                transforms.RandomHorizontalFlip(),
                 transforms.Resize((self.image_size, self.image_size)),
+                self.data_aug_strategy,
                 transforms.ToTensor(),
             ]
         )
@@ -325,7 +350,7 @@ class Office31LoaderViT(Office31Loader):  # pragma: no cover
         self.train_set_transformation = transforms.Compose(
             [
                 transforms.Resize(self.feature_extractor.size),
-                transforms.RandomHorizontalFlip(),
+                self.data_aug_strategy,
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=self.feature_extractor.image_mean,
@@ -337,7 +362,6 @@ class Office31LoaderViT(Office31Loader):  # pragma: no cover
         self.val_set_transformation = transforms.Compose(
             [
                 transforms.Resize(self.feature_extractor.size),
-                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=self.feature_extractor.image_mean,
@@ -352,7 +376,8 @@ if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8}
     office31_loader = Office31LoaderViT(
-        "./examples/data/domain_adaptation_images/amazon/images", args
+        "./examples/data/domain_adaptation_images/amazon/images",
+        args,
     )
     office31_loader.setup(stage="fit")
     i = iter(office31_loader.train_set.dataset)
@@ -372,7 +397,7 @@ if __name__ == "__main__":
         "num_eval_tasks": 50,
     }
     office_loader = Office31FewshotLoader(
-        data_dir="./examples/data/domain_adaptation_images/amazon/images/",
+        data_dir="./examples/data/domain_adaptation_images/amazon/images",
         hyper_params=hparams,
     )
     office_loader.setup(None, 0.1, 0.1)
