@@ -7,7 +7,7 @@ image_size: 224
 lr: 0.0003
 architecture: vit
 pretrained: False
-max_epoch: 5
+max_epoch: 1
 exp_name: vit_training
 # dataset
 data: Office31ViT
