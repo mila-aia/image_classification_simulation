@@ -74,7 +74,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
                             transforms.GaussianBlur(
                                 kernel_size=(5, 9), sigma=(0.1, 2)
                             ),
-                            transforms.RandomRotation(degrees=(0, 180)),
                             transforms.RandomInvert(),
                             transforms.RandomAutocontrast(),
                         ]
