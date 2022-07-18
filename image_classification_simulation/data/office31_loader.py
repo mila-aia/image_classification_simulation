@@ -15,6 +15,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
     Prepares dataset parsers and instantiates data loaders.
     """
+
     def validate_hparams(
         self, hyper_params: typing.Dict[typing.AnyStr, typing.Any]
     ) -> None:
@@ -65,15 +66,21 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         self.data_aug_strategy = transforms.Compose(
             [
                 transforms.RandomApply(
-                    torch.nn.ModuleList([
-                        transforms.ColorJitter(),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.RandomVerticalFlip(),
-                        transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 2)),
-                        transforms.RandomRotation(degrees=(0, 180)),
-                        transforms.RandomInvert(),  
-                        transforms.RandomAutocontrast(),]),
-                        p=self.data_aug_prob),
+                    torch.nn.ModuleList(
+                        [
+                            transforms.ColorJitter(),
+                            transforms.RandomHorizontalFlip(),
+                            transforms.RandomVerticalFlip(),
+                            transforms.GaussianBlur(
+                                kernel_size=(5, 9), sigma=(0.1, 2)
+                            ),
+                            transforms.RandomRotation(degrees=(0, 180)),
+                            transforms.RandomInvert(),
+                            transforms.RandomAutocontrast(),
+                        ]
+                    ),
+                    p=self.data_aug_prob,
+                ),
             ]
         )
 
@@ -344,7 +351,7 @@ class Office31LoaderViT(Office31Loader):  # pragma: no cover
         self.train_set_transformation = transforms.Compose(
             [
                 transforms.Resize(self.feature_extractor.size),
-                transforms.RandomHorizontalFlip(),
+                self.data_aug_strategy,
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=self.feature_extractor.image_mean,
@@ -356,7 +363,6 @@ class Office31LoaderViT(Office31Loader):  # pragma: no cover
         self.val_set_transformation = transforms.Compose(
             [
                 transforms.Resize(self.feature_extractor.size),
-                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize(
                     mean=self.feature_extractor.image_mean,
@@ -371,7 +377,8 @@ if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8}
     office31_loader = Office31LoaderViT(
-        "./examples/data/domain_adaptation_images/amazon/images", args
+        "/home/mila/a/aldo.zaimi/data/domain_adaptation_images/amazon/images",
+        args,
     )
     office31_loader.setup(stage="fit")
     i = iter(office31_loader.train_set.dataset)
@@ -391,7 +398,7 @@ if __name__ == "__main__":
         "num_eval_tasks": 50,
     }
     office_loader = Office31FewshotLoader(
-        data_dir="./examples/data/domain_adaptation_images/amazon/images/",
+        data_dir="/home/mila/a/aldo.zaimi/data/domain_adaptation_images/amazon/images/",
         hyper_params=hparams,
     )
     office_loader.setup(None, 0.1, 0.1)
