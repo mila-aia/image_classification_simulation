@@ -70,6 +70,8 @@ def load_loss(hyper_params: dict):  # pragma: no cover
         loss = torch.nn.CrossEntropyLoss(reduction="sum")
     elif loss_name == "MSELoss":
         loss = torch.nn.MSELoss()
+    elif loss_name == "BCELoss":
+        loss = torch.nn.BCELoss()
     else:
         raise ValueError("loss {} not supported".format(loss_name))
     return loss
