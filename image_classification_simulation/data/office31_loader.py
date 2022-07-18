@@ -376,7 +376,7 @@ if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8}
     office31_loader = Office31LoaderViT(
-        "/home/mila/a/aldo.zaimi/data/domain_adaptation_images/amazon/images",
+        "./examples/data/domain_adaptation_images/amazon/images",
         args,
     )
     office31_loader.setup(stage="fit")
@@ -397,7 +397,7 @@ if __name__ == "__main__":
         "num_eval_tasks": 50,
     }
     office_loader = Office31FewshotLoader(
-        data_dir="/home/mila/a/aldo.zaimi/data/domain_adaptation_images/amazon/images/",
+        data_dir="./examples/data/domain_adaptation_images/amazon/images",
         hyper_params=hparams,
     )
     office_loader.setup(None, 0.1, 0.1)
