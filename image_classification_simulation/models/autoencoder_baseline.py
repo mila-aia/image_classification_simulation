@@ -32,6 +32,8 @@ class ConvAutoEncoder(BaseModel):
 
         # defining network layers
 
+        self.pooling = nn.MaxPool2d(2, 2)
+
         self.conv1 = nn.Conv2d(
             hyper_params["num_channels"],
             self.num_filters,
@@ -59,33 +61,37 @@ class ConvAutoEncoder(BaseModel):
         self.deconv1 = nn.ConvTranspose2d(
             self.num_filters // 4,
             self.num_filters // 2,
-            kernel_size=3,
-            stride=1,
-            padding=1,
+            kernel_size=2,
+            stride=2,
+            padding=0,
         )
 
         self.deconv2 = nn.ConvTranspose2d(
             self.num_filters // 2,
             self.num_filters,
-            kernel_size=3,
-            stride=1,
-            padding=1,
+            kernel_size=2,
+            stride=2,
+            padding=0,
         )
 
         self.deconv3 = nn.ConvTranspose2d(
             self.num_filters,
             hyper_params["num_channels"],
-            kernel_size=3,
-            stride=1,
-            padding=1,
+            kernel_size=2,
+            stride=2,
+            padding=0,
         )
 
         self.encoder = nn.Sequential(
             self.conv1,
             nn.ReLU(),
+            self.pooling,
             self.conv2,
             nn.ReLU(),
+            self.pooling,
             self.conv3,
+            nn.ReLU(),
+            self.pooling,
         )
 
         self.decoder = nn.Sequential(
@@ -94,7 +100,7 @@ class ConvAutoEncoder(BaseModel):
             self.deconv2,
             nn.ReLU(),
             self.deconv3,
-            nn.Tanh(),
+            nn.Sigmoid(),
         )
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
@@ -112,7 +118,7 @@ class ConvAutoEncoder(BaseModel):
         typing.Any
             returns loss and logit scores.
         """
-        input_data, targets = batch  # we don't need the targets
+        input_data, _ = batch  # we don't need the targets
         reconstructed_input = self(
             input_data
         )  # calls the forward pass of the model
@@ -158,10 +164,13 @@ class ConvAutoEncoder(BaseModel):
             loss produced by the loss function.
         """
         loss, reconstructed_input = self._generic_step(batch, batch_idx)
+        input_data, _ = batch
+        train_metric = self.compute_reconstruction_similarity(input_data, reconstructed_input)
         self.log("train_loss", loss)
+        self.log("train_similarity", train_metric)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
-        return loss
+        return {"loss": loss, "acc": train_metric}
 
     def validation_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -186,7 +195,7 @@ class ConvAutoEncoder(BaseModel):
             reconstructed_input, input_data
         )
         self.log("val_loss", loss)
-        self.log("val_acc", val_metric)
+        self.log("val_similarity", val_metric)
         return val_metric
 
     def test_step(
@@ -213,6 +222,7 @@ class ConvAutoEncoder(BaseModel):
         )
         self.log("test_loss", loss)
         self.log("test_acc", test_metric)
+        return test_metric
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
@@ -245,12 +255,12 @@ if __name__ == "__main__":
     model = ConvAutoEncoder(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((16, 3, 100, 100)).to(device)
+    img = torch.rand((16, 3, 224, 224)).to(device)
     labels = torch.randint(0, 31, (16,)).to(device)
-    output = torch.rand((16, 3, 100, 100)).to(device)
+    output = torch.rand((16, 3, 224, 224)).to(device)
 
     loss = model.training_step((img, labels), None)
     print(loss)
 
-    similarity = model.compute_reconstruction_similarity(img, img)
+    similarity = model.compute_reconstruction_similarity(img, output)
     print(similarity)
