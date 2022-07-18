@@ -158,10 +158,13 @@ class ConvAutoEncoder(BaseModel):
             loss produced by the loss function.
         """
         loss, reconstructed_input = self._generic_step(batch, batch_idx)
+        input_data, _ = batch
+        train_metric = self.compute_reconstruction_similarity(input_data, reconstructed_input)
         self.log("train_loss", loss)
+        self.log("train_similarity", train_metric)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
-        return loss
+        return {"loss": loss, "acc": train_metric}
 
     def validation_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -213,6 +216,7 @@ class ConvAutoEncoder(BaseModel):
         )
         self.log("test_loss", loss)
         self.log("test_acc", test_metric)
+        return test_metric
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
