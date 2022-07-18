@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from torch import device, cuda
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
-from image_classification_simulation.models.model_loader import load_model
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
 from joblib import dump, load
