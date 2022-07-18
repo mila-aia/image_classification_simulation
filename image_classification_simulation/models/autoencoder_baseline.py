@@ -195,7 +195,7 @@ class ConvAutoEncoder(BaseModel):
             reconstructed_input, input_data
         )
         self.log("val_loss", loss)
-        self.log("val_acc", val_metric)
+        self.log("val_similarity", val_metric)
         return val_metric
 
     def test_step(
