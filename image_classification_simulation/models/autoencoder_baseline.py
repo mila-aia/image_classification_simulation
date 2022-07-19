@@ -96,6 +96,8 @@ class ConvAutoEncoder(BaseModel):
             self.pooling,
         )
 
+        self.feature_extractor = self.encoder
+
         self.decoder = nn.Sequential(
             self.deconv1,
             nn.ReLU(),
@@ -244,7 +246,6 @@ class ConvAutoEncoder(BaseModel):
         # print(batch_images.shape)
 
         bottleneck = self.encoder(batch_images)
-        self.feature_extractor = self.flatten(bottleneck)
         reconstructed_input = self.decoder(bottleneck)
 
         return reconstructed_input
@@ -270,5 +271,5 @@ if __name__ == "__main__":
     similarity = model.compute_reconstruction_similarity(img, output)
     print(similarity)
 
-    features = model.feature_extractor
+    features = model.extract_features(img)
     print(features.shape)
