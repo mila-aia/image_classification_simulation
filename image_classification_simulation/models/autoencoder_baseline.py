@@ -34,6 +34,8 @@ class ConvAutoEncoder(BaseModel):
 
         self.pooling = nn.MaxPool2d(2, 2)
 
+        self.flatten = nn.Flatten()
+
         self.conv1 = nn.Conv2d(
             hyper_params["num_channels"],
             self.num_filters,
@@ -226,20 +228,6 @@ class ConvAutoEncoder(BaseModel):
         self.log("test_acc", test_metric)
         return test_metric
 
-    def extract_features(
-        self, batch: torch.Tensor
-    ) -> typing.Union[torch.Tensor, None]:
-        """Extracts features from the model.
-
-        Returns
-        -------
-        torch.Tensor
-            The extracted features.
-        """
-        z_x = self.encoder.forward(batch)
-        z_x = nn.Flatten(z_x)
-        return z_x
-
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
 
@@ -256,6 +244,7 @@ class ConvAutoEncoder(BaseModel):
         # print(batch_images.shape)
 
         bottleneck = self.encoder(batch_images)
+        self.feature_extractor = self.flatten(bottleneck)
         reconstructed_input = self.decoder(bottleneck)
 
         return reconstructed_input
@@ -281,5 +270,5 @@ if __name__ == "__main__":
     similarity = model.compute_reconstruction_similarity(img, output)
     print(similarity)
 
-    features = model.extract_features(img)
-    print(features)
+    features = model.feature_extractor
+    print(features.shape)

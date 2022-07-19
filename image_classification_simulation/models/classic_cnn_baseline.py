@@ -293,6 +293,9 @@ class ClassicCNN(BaseModel):
         z_x = self.activation(z_x)
         z_x = self.linear2(z_x)
         z_x = self.activation(z_x)
+
+        self.feature_extractor = z_x
+
         logits = self.linear3(z_x)
 
         return logits
@@ -316,3 +319,6 @@ if __name__ == "__main__":
 
     loss = model.training_step((img, label), None)
     print(loss)
+
+    features = model.feature_extractor
+    print(features.shape)
