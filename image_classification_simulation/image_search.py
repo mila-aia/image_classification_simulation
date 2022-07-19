@@ -100,19 +100,11 @@ class ImageSimilaritySearch:
         self.dataset_cluster_ids = self.dataset["cluster_id"].values
         print(">>> loaded cluster ids from file")
 
-    def predict_image_cluster(self, path) -> int:
-        """Predict the cluster id of an image.
+    def preprocess_image(self, image_path):
+        """Preprocess the image."""
+        return self.transformation(Image.open(image_path))
 
-        Parameters
-        ----------
-        path : str
-            Path to the image.
-        """
-        image = Image.open(path)
-        image = self.transformation(image)
-        return self.clustering.predict_one_image(image)
-
-    def find_similar_images(self, path_to_image) -> pd.DataFrame:
+    def find_similar_images(self, path_to_image, topk=5) -> pd.DataFrame:
         """Find similar images to a given image.
 
         Parameters
@@ -125,6 +117,18 @@ class ImageSimilaritySearch:
         pd.DataFrame
             A DataFrame object containing similar images.
         """
-        target_cluster_id = self.predict_image_cluster(path_to_image)
+        image = self.preprocess_image(path_to_image)
+        target_cluster_id = self.clustering.predict_one_image(image)
         query_indices = self.dataset["cluster_id"] == target_cluster_id
-        return self.dataset[query_indices]
+
+        query_image_paths = self.dataset[query_indices]["image_path"].values
+        list_processed_imgs = [
+            self.preprocess_image(path) for path in query_image_paths
+        ]
+        if topk:
+            query_indices = self.clustering.compute_distances(
+                image, list_processed_imgs, topk
+            )
+            return self.dataset.iloc[query_indices]
+        else:
+            return self.dataset[query_indices]

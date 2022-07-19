@@ -142,8 +142,7 @@ class Clustering:
             dataloader can be train, validation or test dataloader
         """
         for batch_images, batch_labels in dataloader:
-            features = self.feature_ext(batch_images.to(self.device))
-            features = features.detach().cpu().numpy()
+            features = self.extract_features(batch_images)
             self.clustering_alg.partial_fit(features)
 
     def predict(self, dataloader: DataLoader):
@@ -156,8 +155,7 @@ class Clustering:
         """
         predicted_clusters = []
         for batch_images, batch_labels in dataloader:
-            features = self.feature_ext(batch_images.to(self.device))
-            features = features.detach().cpu().numpy()
+            features = self.extract_features(batch_images)
             predicted_clusters.extend(self.clustering_alg.predict(features))
         return np.array(predicted_clusters)
 
@@ -170,11 +168,23 @@ class Clustering:
             image to predict the clusters
         """
         # model needs the image to be a batch of size 1
-        image = torch.unsqueeze(image, 0)
-        features = self.feature_ext(image.to(self.device))
-        features = features.detach().cpu().numpy()
+        features = self.extract_features(image)
         cluster_id = self.clustering_alg.predict(features)
         return cluster_id.item()
+
+    def extract_features(self, image: torch.Tensor):
+        """Extract features from the image.
+
+        Parameters
+        ----------
+        image : torch.Tensor
+            image to extract features
+        """
+        if len(image.shape) == 3:
+            image = image.unsqueeze(0)
+        features = self.feature_ext(image.to(self.device))
+        features = features.detach().cpu().numpy()
+        return features
 
     def visualize(self, dataloader: DataLoader):
         """Visualize the clusters.
@@ -208,3 +218,34 @@ class Clustering:
             path to load the model
         """
         self.clustering_alg = load(path)
+
+    def compute_distances(
+        self, source: torch.Tensor, targets: torch.Tensor, topk: int
+    ) -> list:
+        """Compute distances between source and targets.
+
+        Parameters
+        ----------
+        source : torch.Tensor
+            source image
+        targets : torch.Tensor
+            targets image
+        topk : int
+            number of nearest neighbors to return
+
+        Returns
+        -------
+        list
+            list of distances
+        """
+        source = self.feature_ext(source.unsqueeze(0).to(self.device))
+        v = torch.tensor([]).to(self.device)
+        for target in targets:
+            target = self.feature_ext(target.unsqueeze(0).to(self.device))
+            v = torch.cat((v, target))
+        dist = torch.cdist(source, v)
+        if topk and dist.shape[1] > topk:
+            values, indices = torch.topk(1 / dist, k=topk)
+            return indices.cpu().tolist()[0]
+        else:
+            return dist.cpu().tolist()
