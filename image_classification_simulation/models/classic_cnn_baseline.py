@@ -122,7 +122,61 @@ class ClassicCNN(BaseModel):
 
         self.linear1 = nn.Linear(fc_size, 256)
         self.linear2 = nn.Linear(256, 128)
+
         self.linear3 = nn.Linear(128, hyper_params["num_classes"])
+
+        self.block1 = nn.Sequential(
+            self.conv1,
+            self.bn1,
+            self.activation,
+            self.dropout,
+            self.conv2,
+            self.bn2,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
+        self.block2 = nn.Sequential(
+            self.conv3,
+            self.bn3,
+            self.activation,
+            self.dropout,
+            self.conv4,
+            self.bn4,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
+        self.block3 = nn.Sequential(
+            self.conv5,
+            self.bn5,
+            self.activation,
+            self.dropout,
+            self.conv6,
+            self.bn6,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
+        self.fc_block = nn.Sequential(
+            self.flatten,
+            self.linear1,
+            self.activation,
+            self.linear2,
+            self.activation,
+        )
+
+        self.feature_extractor = nn.Sequential(
+            self.block1,
+            self.block2,
+            self.block3,
+            self.fc_block,
+        )
+
+        self.classifier = self.linear3
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -254,46 +308,12 @@ class ClassicCNN(BaseModel):
         """
         # print(batch_images.shape)
 
-        # Block 1
-        z_x = self.conv1(batch_images)
-        z_x = self.bn1(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.dropout(z_x)
-        z_x = self.conv2(z_x)
-        z_x = self.bn2(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.dropout(z_x)
-        z_x = self.maxpooling(z_x)
-
-        # Block 2
-        z_x = self.conv3(z_x)
-        z_x = self.bn3(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.dropout(z_x)
-        z_x = self.conv4(z_x)
-        z_x = self.bn4(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.dropout(z_x)
-        z_x = self.maxpooling(z_x)
-
-        # Block 3
-        z_x = self.conv5(z_x)
-        z_x = self.bn5(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.dropout(z_x)
-        z_x = self.conv6(z_x)
-        z_x = self.bn6(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.dropout(z_x)
-        z_x = self.maxpooling(z_x)
-
-        # Fully connected block
-        z_x = self.flatten(z_x)
-        z_x = self.linear1(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.linear2(z_x)
-        z_x = self.activation(z_x)
-        logits = self.linear3(z_x)
+        # Conv. blocks
+        z_x = self.block1(batch_images)
+        z_x = self.block2(z_x)
+        z_x = self.block3(z_x)
+        z_x = self.fc_block(z_x)
+        logits = self.classifier(z_x)
 
         return logits
 
@@ -316,3 +336,6 @@ if __name__ == "__main__":
 
     loss = model.training_step((img, label), None)
     print(loss)
+
+    features = model.extract_features(img)
+    print(features.shape)

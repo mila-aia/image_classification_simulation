@@ -34,6 +34,8 @@ class ConvAutoEncoder(BaseModel):
 
         self.pooling = nn.MaxPool2d(2, 2)
 
+        self.flatten = nn.Flatten()
+
         self.conv1 = nn.Conv2d(
             hyper_params["num_channels"],
             self.num_filters,
@@ -93,6 +95,8 @@ class ConvAutoEncoder(BaseModel):
             nn.ReLU(),
             self.pooling,
         )
+
+        self.feature_extractor = self.encoder
 
         self.decoder = nn.Sequential(
             self.deconv1,
@@ -165,7 +169,9 @@ class ConvAutoEncoder(BaseModel):
         """
         loss, reconstructed_input = self._generic_step(batch, batch_idx)
         input_data, _ = batch
-        train_metric = self.compute_reconstruction_similarity(input_data, reconstructed_input)
+        train_metric = self.compute_reconstruction_similarity(
+            input_data, reconstructed_input
+        )
         self.log("train_loss", loss)
         self.log("train_similarity", train_metric)
         self.log("epoch", self.current_epoch)
@@ -264,3 +270,6 @@ if __name__ == "__main__":
 
     similarity = model.compute_reconstruction_similarity(img, output)
     print(similarity)
+
+    features = model.extract_features(img)
+    print(features.shape)
