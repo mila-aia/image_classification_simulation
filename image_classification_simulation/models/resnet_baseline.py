@@ -229,10 +229,8 @@ class Resnet(BaseModel):
             Logit scores
         """
         # Extract the features of support and query images
-        z_x = self.feature_extractor.forward(batch_images)
-        z_x = self.flatten(z_x)
+        z_x = self.extract_features(batch_images)
         logits = self.linear(z_x)
-
         return logits
 
 
