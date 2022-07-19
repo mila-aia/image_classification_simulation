@@ -98,7 +98,7 @@ class Clustering:
         hparams : dict
             hyperparameters
         """
-        self.device = 'cpu'#device("cuda" if cuda.is_available() else "cpu")
+        self.device = device("cuda" if cuda.is_available() else "cpu")
 
         self.path_features_ext = hparams["path_features_ext"]
 
