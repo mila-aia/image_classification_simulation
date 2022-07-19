@@ -229,7 +229,13 @@ class ConvAutoEncoder(BaseModel):
     def extract_features(
         self, batch: torch.Tensor
     ) -> typing.Union[torch.Tensor, None]:
-        """Extracts features from the model."""
+        """Extracts features from the model.
+
+        Returns
+        -------
+        torch.Tensor
+            The extracted features.
+        """
         z_x = self.encoder.forward(batch)
         z_x = nn.Flatten(z_x)
         return z_x
