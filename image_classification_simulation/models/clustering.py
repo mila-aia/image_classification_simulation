@@ -98,22 +98,21 @@ class Clustering:
         hparams : dict
             hyperparameters
         """
-        self.device = device("cuda" if cuda.is_available() else "cpu")
+        self.device = 'cpu'#device("cuda" if cuda.is_available() else "cpu")
 
         self.path_features_ext = hparams["path_features_ext"]
 
-        self.feature_ext = load_model(hparams).to(self.device)
-        self.feature_ext.load_from_checkpoint(
+        self.model = load_model(hparams).to(self.device)
+        self.model.load_from_checkpoint(
             checkpoint_path=self.path_features_ext
         )
         # have to set to eval here because batch norm
         # has no meaning for one instance
-        self.feature_ext.eval()
+        self.model.eval()
 
         # last layer is usually used for task specific finetuning
         # we can remove it here, since we need features only
-        layers = list(self.feature_ext.children())[:-1]
-        self.feature_extractor = layers
+        # layers = list(self.feature_ext.children())[:-1]
 
         if hparams["clustering_alg"] == "MiniBatchKMeans":
             self.clustering_alg = MiniBatchKMeans(
@@ -180,9 +179,11 @@ class Clustering:
         image : torch.Tensor
             image to extract features
         """
+        # in case of no batch dimension is available
         if len(image.shape) == 3:
             image = image.unsqueeze(0)
-        features = self.feature_ext(image.to(self.device))
+        image = image.to(self.device) # to cuda if available
+        features = self.model.extract_features(image)
         features = features.detach().cpu().numpy()
         return features
 
@@ -238,14 +239,15 @@ class Clustering:
         list
             list of distances
         """
-        source = self.feature_ext(source.unsqueeze(0).to(self.device))
+        source = self.model.extract_features(source.unsqueeze(0).to(self.device))
         v = torch.tensor([]).to(self.device)
         for target in targets:
-            target = self.feature_ext(target.unsqueeze(0).to(self.device))
+            target = self.model.extract_features(target.unsqueeze(0).to(self.device))
             v = torch.cat((v, target))
         dist = torch.cdist(source, v)
         if topk and dist.shape[1] > topk:
             values, indices = torch.topk(1 / dist, k=topk)
-            return indices.cpu().tolist()[0]
         else:
-            return dist.cpu().tolist()
+            values, indices = torch.topk(1 / dist, k=1)
+        torch.cuda.empty_cache()
+        return indices.cpu().tolist()[0]

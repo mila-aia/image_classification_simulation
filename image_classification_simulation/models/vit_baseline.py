@@ -168,7 +168,7 @@ class ViT(BaseModel):
             Logit scores
         """
         z_x = self.extract_features(batch_images)
-        logits = self.linear(z_x[:, 0, :])  # MLP head
+        logits = self.linear(z_x)  # MLP head
         return logits
 
     def extract_features(self, batch_images: torch.Tensor):
@@ -181,7 +181,7 @@ class ViT(BaseModel):
         """
         z_x = self.feature_extractor(batch_images)
         z_x = z_x["last_hidden_state"]
-        return z_x
+        return z_x[:, 0, :] # take cls token only
 
 
 if __name__ == "__main__":

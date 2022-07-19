@@ -74,7 +74,7 @@ class BaseModel(pl.LightningModule):
             z_x = self.flatten(z_x)
             return z_x
         else:
-            pass
+            raise Exception("No feature extractor found.")
 
 
 class MyModel(BaseModel):  # pragma: no cover
