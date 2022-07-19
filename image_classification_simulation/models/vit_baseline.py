@@ -181,7 +181,7 @@ class ViT(BaseModel):
         """
         z_x = self.feature_extractor(batch_images)
         z_x = z_x["last_hidden_state"]
-        return z_x[:, 0, :] # take cls token only
+        return z_x[:, 0, :]  # take cls token only
 
 
 if __name__ == "__main__":

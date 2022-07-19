@@ -103,9 +103,7 @@ class Clustering:
         self.path_features_ext = hparams["path_features_ext"]
 
         self.model = load_model(hparams).to(self.device)
-        self.model.load_from_checkpoint(
-            checkpoint_path=self.path_features_ext
-        )
+        self.model.load_from_checkpoint(checkpoint_path=self.path_features_ext)
         # have to set to eval here because batch norm
         # has no meaning for one instance
         self.model.eval()
@@ -182,7 +180,7 @@ class Clustering:
         # in case of no batch dimension is available
         if len(image.shape) == 3:
             image = image.unsqueeze(0)
-        image = image.to(self.device) # to cuda if available
+        image = image.to(self.device)  # to cuda if available
         features = self.model.extract_features(image)
         features = features.detach().cpu().numpy()
         return features
@@ -239,10 +237,14 @@ class Clustering:
         list
             list of distances
         """
-        source = self.model.extract_features(source.unsqueeze(0).to(self.device))
+        source = self.model.extract_features(
+            source.unsqueeze(0).to(self.device)
+        )
         v = torch.tensor([]).to(self.device)
         for target in targets:
-            target = self.model.extract_features(target.unsqueeze(0).to(self.device))
+            target = self.model.extract_features(
+                target.unsqueeze(0).to(self.device)
+            )
             v = torch.cat((v, target))
         dist = torch.cdist(source, v)
         if topk and dist.shape[1] > topk:
