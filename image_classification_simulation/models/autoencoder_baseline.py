@@ -248,8 +248,23 @@ class ConvAutoEncoder(BaseModel):
 
         return reconstructed_input
 
-    def extract_features(self, batch: torch.Tensor) -> typing.Union[torch.Tensor, None]:
+    def extract_features(
+        self, batch: torch.Tensor
+    ) -> torch.Tensor:
+        """Extracts features from the model.
+        
+        Parameters
+        ----------
+        batch : torch.Tensor
+            A batch of data (images).
+            
+        Returns
+        -------
+        torch.Tensor
+            Features extracted from the model.
+        """
         return self.flatten(self.encoder(batch))
+
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
