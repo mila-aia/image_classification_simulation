@@ -226,15 +226,13 @@ class ConvAutoEncoder(BaseModel):
         self.log("test_acc", test_metric)
         return test_metric
 
-    def extract_features(self) -> nn.Module:
-        """Returns the feature extraction (learned representation) of the model.
-
-        Returns
-        -------
-        nn.Module
-            Feature Extraction part of the model
-        """
-        return self.encoder
+    def extract_features(
+        self, batch: torch.Tensor
+    ) -> typing.Union[torch.Tensor, None]:
+        """Extracts features from the model."""
+        z_x = self.encoder.forward(batch)
+        z_x = nn.Flatten(z_x)
+        return z_x
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
@@ -277,5 +275,5 @@ if __name__ == "__main__":
     similarity = model.compute_reconstruction_similarity(img, output)
     print(similarity)
 
-    features = model.extract_features()
+    features = model.extract_features(img)
     print(features)
