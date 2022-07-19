@@ -165,7 +165,9 @@ class ConvAutoEncoder(BaseModel):
         """
         loss, reconstructed_input = self._generic_step(batch, batch_idx)
         input_data, _ = batch
-        train_metric = self.compute_reconstruction_similarity(input_data, reconstructed_input)
+        train_metric = self.compute_reconstruction_similarity(
+            input_data, reconstructed_input
+        )
         self.log("train_loss", loss)
         self.log("train_similarity", train_metric)
         self.log("epoch", self.current_epoch)
@@ -224,6 +226,16 @@ class ConvAutoEncoder(BaseModel):
         self.log("test_acc", test_metric)
         return test_metric
 
+    def extract_features(self) -> nn.Module:
+        """Returns the feature extraction (learned representation) of the model.
+
+        Returns
+        -------
+        nn.Module
+            Feature Extraction part of the model
+        """
+        return self.encoder
+
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
 
@@ -264,3 +276,6 @@ if __name__ == "__main__":
 
     similarity = model.compute_reconstruction_similarity(img, output)
     print(similarity)
+
+    features = model.extract_features()
+    print(features)
