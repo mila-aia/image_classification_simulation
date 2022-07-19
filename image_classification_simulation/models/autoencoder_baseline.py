@@ -96,8 +96,6 @@ class ConvAutoEncoder(BaseModel):
             self.pooling,
         )
 
-        self.feature_extractor = self.encoder
-
         self.decoder = nn.Sequential(
             self.deconv1,
             nn.ReLU(),
@@ -250,6 +248,8 @@ class ConvAutoEncoder(BaseModel):
 
         return reconstructed_input
 
+    def extract_features(self, batch: torch.Tensor) -> typing.Union[torch.Tensor, None]:
+        return self.flatten(self.encoder(batch))
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
