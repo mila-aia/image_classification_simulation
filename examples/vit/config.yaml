@@ -1,5 +1,5 @@
 # general
-batch_size: 16
+batch_size: 32
 optimizer: adamW
 loss: CrossEntropyLoss
 patience: 5
@@ -13,6 +13,7 @@ exp_name: vit_training
 data: Office31ViT
 img_size: 224
 num_channels: 3
+data_aug_prob: 0.5
 # set to null to avoid setting a seed (can speed up GPU computation, but
 # results will not be reproducible)
 seed: 1234
