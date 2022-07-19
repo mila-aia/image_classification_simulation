@@ -112,7 +112,7 @@ class Clustering:
 
         # last layer is usually used for task specific finetuning
         # we can remove it here, since we need features only
-        layers = list(self.feature_ext.children())[-1]
+        layers = list(self.feature_ext.children())[:-1]
         self.feature_extractor = layers
 
         if hparams["clustering_alg"] == "MiniBatchKMeans":
