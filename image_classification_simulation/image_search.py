@@ -21,7 +21,7 @@ def batchify(iterable: typing.Iterable, batch_size: int = 32):
         batch size, by default 32
 
     Yields
-    -------
+    ------
     typing.Iterable
         batches of elements
     """
