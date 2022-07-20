@@ -18,6 +18,10 @@ This project implements a set of tools and models to perform multiclass classifi
 
 ## Documentation
 
+### Overview of the framework
+
+![Overview figure](docs/figures/fig0.jpg)
+
 ### Datasets
 
 
