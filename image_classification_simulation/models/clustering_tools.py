@@ -104,8 +104,9 @@ def get_clustering_alg(hparams: dict):
         clustering_alg = Birch(
             # threshold=12.5,
             n_clusters=hparams["num_clusters"]
-            )
+        )
     return clustering_alg
+
 
 def get_inertia(clustering_alg):
     """Get the inertia of the clustering algorithm."""
