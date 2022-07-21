@@ -2,11 +2,12 @@
 batch_size: 16
 optimizer: adam
 loss: BCELoss
-patience: 20
+patience: 10
 lr: 0.001
+lr: 'orion~loguniform(1e-5, 1.0)'
 architecture: conv_ae
 pretrained: False
-max_epoch: 10
+max_epoch: 40
 exp_name: ae_test_exp
 # dataset
 data: Office31
