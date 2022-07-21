@@ -3,7 +3,10 @@
 
 This project implements a set of tools and models to perform multiclass classification of images.
 
-* Free software: MIT license
+Use Case: classifying client test images based on a catalog of available products.
+
+
+
 
 ## Setup
 
@@ -14,17 +17,29 @@ This project implements a set of tools and models to perform multiclass classifi
 ### Install the dependencies:
 (it is strongly recommended to create and/or activate a virtual environment before this step)
 
+Go to the folder of the repository and run the following command:
+
     pip install -e .
 
 ## Documentation
 
 ### Overview of the framework
 
-![Overview figure](docs/figures/fig0.jpg)
+![Fig0](docs/figures/fig0.jpg)
 
 ### Datasets
 
+#### Office31 Dataset
 
+The main dataset used in this repository is the Office31 dataset. The dataset can be downloaded from this [link](https://drive.google.com/file/d/0B4IapRTv9pJ1WGZVd1VDMmhwdlE/view?resourcekey=0-gNMHVtZfRAyO_t2_WrOunA). It it recommended to move the dataset under `/examples/data` after downloading and unzipping it. The [Office31 Dataloader](/image_classification_simulation/data/office31_loader.py) will then take care of the processing of the data for training/testing with the available models.
+
+#### Other Datasets
+
+Other open-source datasets are available and can be used with the models implemented in the repository:
+
+* [MNIST](/image_classification_simulation/data/mnist_loader.py)
+* [Flowers102](/image_classification_simulation/data/flowers102_loader.py)
+* [Omniglot](/image_classification_simulation/data/omniglot_loader.py)
 
 ### Models
 
@@ -129,6 +144,15 @@ To automatically generate docs for your project, cd to the `docs` folder then ru
 
 To view the docs locally, open `docs/_build/html/index.html` in your browser.
 
+## Licence
+
+The MIT License (MIT)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## YOUR PROJECT README:
 
