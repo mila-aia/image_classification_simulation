@@ -8,7 +8,10 @@ from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
 from sklearn import metrics
 
-def get_clustering_metrics(labels_true: np.array, labels_predicted: np.array)->dict:
+
+def get_clustering_metrics(
+    labels_true: np.array, labels_predicted: np.array
+) -> dict:
     """
     Computes the clustering metrics.
 
@@ -21,9 +24,15 @@ def get_clustering_metrics(labels_true: np.array, labels_predicted: np.array)->d
     """
     # https://scikit-learn.org/stable/modules/clustering.html#rand-score
     m = {
-        "rand_score": metrics.adjusted_rand_score(labels_true, labels_predicted),
-        "adjusted_rand_score": metrics.adjusted_rand_score(labels_true, labels_predicted),
-        "mutual_info_score": metrics.mutual_info_score(labels_true, labels_predicted),
+        "rand_score": metrics.adjusted_rand_score(
+            labels_true, labels_predicted
+        ),
+        "adjusted_rand_score": metrics.adjusted_rand_score(
+            labels_true, labels_predicted
+        ),
+        "mutual_info_score": metrics.mutual_info_score(
+            labels_true, labels_predicted
+        ),
     }
     return m
 
