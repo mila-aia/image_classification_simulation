@@ -5,9 +5,6 @@ This project implements a set of tools and models to perform multiclass classifi
 
 Use Case: classifying client test images based on a catalog of available products.
 
-
-
-
 ## Setup
 
 ### Clone the repository:
@@ -43,31 +40,27 @@ Other open-source datasets are available and can be used with the models impleme
 
 ### Models
 
-#### Simple CNN baseline from scratch:
+#### Models for end-to-end classification
 
-Simple image classification architecture that is a succession of convolutional layers and max pooling layers. It ends with a fully connected linear layer.
-* Implemented in the _ClassicCNN_ class.
+* [Standard CNN baseline](/image_classification_simulation/models/classic_cnn_baseline.py): Classic CNN architecture consisting of a succession of convolutional & pooling layers and ending with 3 fully connected linear layers. It includes batch normalization and dropout layers for regularization.
+* [ResNet baseline](/image_classification_simulation/models/resnet_baseline.py): Pre-trained ResNet18 architecture that can be fine-tuned (transfer learning) for downstream classification tasks on new image datasets.
+* [Vision Transformer baseline](/image_classification_simulation/models/vit_baseline.py): Pre-trained Vision Transformer (ViT) architecture from HuggingFace that can be fine-tuned (transfer learning) for downstream classification tasks on new image datasets.
 
-#### ResNet baseline with transfer learning:
+#### Models for representation learning
 
-Pre-trained ResNet18 architecture that is fine-tuned on a new task (dataset).
-* Implemented in the _ResNet_ class.
+* [Convolutional autoencoder baseline](/image_classification_simulation/models/autoencoder_baseline.py): Convolutional autoencoder (AE) architecture that can be used to learn compact hidden features/representations of the data. The bottleneck of the model can be used for subsequent tasks such as image clustering.
 
-#### Vision transformer (ViT) baseline with transfer learning:
+#### Models for few shot learning (FSL)
 
-Pre-trained ViT for image classification from HuggingFace, that is fine-tuned on a new task (dataset).
+* [Prototypical Networks](/image_classification_simulation/models/protonet.py): FSL model that uses feature representations of the images (these representations can come from the trained classification models previously presented) to assign them to a class (method based on distance between the class prototypes and the representation embeddings of the input images).
 
-#### Few shot learning
+#### Models for image clustering
 
-#### Clustering on top of representation learning
-
+* [Clustering](/image_classification_simulation/models/clustering_tools.py): unsupervised clustering (using K-Means or BIRCH algorithms) that creates class clusters of the data by using learned feaures/representations from a backbone (which can be any of the classification models previously presented).
 
 ## Running the code
 
-### Run the tests
-Just run (from the root folder):
 
-    pytest
 
 ### Run the code/examples.
 Note that the code should already compile at this point.
