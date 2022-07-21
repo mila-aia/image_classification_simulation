@@ -60,82 +60,32 @@ Other open-source datasets are available and can be used with the models impleme
 
 ## Running the code
 
+### Training a classification model
 
+Each model implemented in the repository has a corresponding `config.yaml` configuration file under the `/examples` subfolder. This configuration file sets up the training hyperparameters relevant to the model as well as the architecture and data to use for the training.
 
-### Run the code/examples.
-Note that the code should already compile at this point.
+#### Use Case: training the standard CNN model from scratch on the Amazon domain of the Office31 dataset on a CPU from the terminal
 
-Running examples can be found under the `examples` folder.
+Launch the following command from the main repository folder:
+```
+main --data /examples/data/domain_adaptation_images/amazon/images --output ./output --config /examples/classic_cnn/config.yaml --start-from-scratch
+```
 
-In particular, you will find examples for:
-* local machine (e.g., your laptop).
-* a slurm cluster.
+#### Use Case: fine-tuning the vision transformer on the Amazon domain of the Office31 dataset on a GPU from the terminal
 
-For both these cases, there is the possibility to run with or without Orion.
-(Orion is a hyper-parameter search tool - see https://github.com/Epistimio/orion -
-that is already configured in this project)
+Launch the following command from the main repository folder:
+```
+main --data /examples/data/domain_adaptation_images/amazon/images --output ./output --config /examples/vit/config.yaml --start-from-scratch --gpus 0
+```
 
-#### Run locally
+### Applying image clustering
 
-For example, to run on your local machine without Orion:
+TODO
 
-    cd examples/local
-    sh run.sh
+### Using few shot learning
 
+TODO
 
-#### Run on a remote cluster (with Slurm)
-
-First, bring you project on the cluster (assuming you didn't create your
-project directly there). To do so, simply login on the cluster and git
-clone your project:
-
-    git clone git@github.com:alzaia/image_classification_simulation.git
-
-Then activate your virtual env, and install the dependencies:
-
-    cd image_classification_simulation
-    pip install -e .
-
-To run with Slurm, just:
-
-    cd examples/slurm
-    sh run.sh
-
-Check the log to see that you got an almost perfect loss (i.e., 0).
-
-#### Run with Orion on the Slurm cluster
-
-This example will run orion for 2 trials (see the orion config file).
-To do so, go into `examples/slurm_orion`.
-Here you can find the orion config file (`orion_config.yaml`), as well as the config
-file (`config.yaml`) for your project (that contains the hyper-parameters).
-
-In general, you will want to run Orion in parallel over N slurm jobs.
-To do so, simply run `sh run.sh` N times.
-
-When Orion has completed the trials, you will find the orion db file and the
-mlruns folder (i.e., the folder containing the mlflow results).
-
-You will also find the output of your experiments in `orion_working_dir`, which
-will contain a folder for every trial.
-Inside these folders, you can find the models (the best one and the last one), the config file with
-the hyper-parameters for this trial, and the log file.
-
-You can check orion status with the following commands:
-(to be run from `examples/slurm_orion`)
-
-    export ORION_DB_ADDRESS='orion_db.pkl'
-    export ORION_DB_TYPE='pickleddb'
-    orion status
-    orion info --name my_exp
-
-### Building docs:
-
-To automatically generate docs for your project, cd to the `docs` folder then run:
-
-    make html
-
-To view the docs locally, open `docs/_build/html/index.html` in your browser.
 
 ## Licence
 
@@ -147,6 +97,4 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-## YOUR PROJECT README:
-
-* __TODO__
+Copyright (c) 2022 Mila - The Quebec AI Institute
