@@ -16,5 +16,5 @@ export ORION_DB_ADDRESS='orion_db.pkl'
 export ORION_DB_TYPE='pickleddb'
 
 orion -v hunt --config orion_config.yaml \
-    main --data $HOME/data/domain_adaptation_images/amazon/images --config config.yaml --start-from-scratch --gpus 0 \
+    main --data ./examples/data/domain_adaptation_images/amazon/images --config config.yaml --start-from-scratch --gpus 0 \
     --output '{exp.working_dir}/{exp.name}_{trial.id}/' --log '{exp.working_dir}/{exp.name}_{trial.id}/exp.log' --tmp-folder ${SLURM_TMPDIR}
