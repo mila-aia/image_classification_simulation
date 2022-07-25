@@ -51,7 +51,9 @@ class ImageSimilaritySearch:
 
         # initialize and load model
         self.model = load_model(hparams).to(self.device)
-        self.model.load_from_checkpoint(checkpoint_path=self.path_to_model)
+        self.model.load_from_checkpoint(
+            checkpoint_path=self.path_to_model, strict=False
+        )
         # have to set to eval here because batch norm
         # has no meaning for one instance
         self.model.eval()

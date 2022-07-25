@@ -6,6 +6,35 @@ from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
+from sklearn import metrics
+
+
+def get_clustering_metrics(
+    labels_true: np.array, labels_predicted: np.array
+) -> dict:
+    """
+    Computes the clustering metrics.
+
+    Parameters
+    ----------
+    labels_true : np.array of shape (n_samples,)
+        The true labels.
+    labels_predicted : np.array, shape (n_samples)
+        The predicted labels.
+    """
+    # https://scikit-learn.org/stable/modules/clustering.html#rand-score
+    m = {
+        "rand_score": metrics.adjusted_rand_score(
+            labels_true, labels_predicted
+        ),
+        "adjusted_rand_score": metrics.adjusted_rand_score(
+            labels_true, labels_predicted
+        ),
+        "mutual_info_score": metrics.mutual_info_score(
+            labels_true, labels_predicted
+        ),
+    }
+    return m
 
 
 def show_grid_images(
