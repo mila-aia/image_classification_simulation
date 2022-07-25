@@ -2,11 +2,11 @@
 batch_size: 32
 optimizer: adamW
 loss: CrossEntropyLoss
-patience: 20
+patience: 10
 lr: 'orion~loguniform(1e-5, 1.0)'
 architecture: classic-cnn
 pretrained: False
-max_epoch: 2
+max_epoch: 10
 exp_name: cnn_test_exp
 img_size: 224
 num_classes: 31
@@ -17,4 +17,4 @@ data: Office31
 # results will not be reproducible)
 seed: 1234
 # architecture
-num_filters: 4
+num_filters: 'orion~choices([2, 4, 8])'
