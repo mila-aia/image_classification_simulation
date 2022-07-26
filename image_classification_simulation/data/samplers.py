@@ -11,11 +11,23 @@ from sklearn.model_selection import StratifiedKFold
 
 
 class StratifiedBatchSampler:
-    """Stratified batch sampling
+    """Stratified batch sampling.
+
     Provides equal representation of target classes in each batch
     """
 
     def __init__(self, y, batch_size, shuffle=True):
+        """Initialize the class.
+        
+        Parameters
+        ----------
+        y : torch.Tensor
+            target labels
+        batch_size : int
+            batch size
+        shuffle : bool
+            whether to shuffle the data
+        """
         if torch.is_tensor(y):
             y = y.numpy()
         # assert len(y.shape) == 1, 'label array must be 1D'
@@ -26,12 +38,14 @@ class StratifiedBatchSampler:
         self.shuffle = shuffle
 
     def __iter__(self):
+        """Creates a sampler iterator."""
         if self.shuffle:
             self.skf.random_state = torch.randint(0, int(1e8), size=()).item()
         for train_idx, test_idx in self.skf.split(self.X, self.y):
             yield test_idx
 
     def __len__(self):
+        """Returns the number of batches."""
         return len(self.y)
 
 
