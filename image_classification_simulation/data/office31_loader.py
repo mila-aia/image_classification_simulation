@@ -7,8 +7,9 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, random_split
 from image_classification_simulation.data.data_loader import MyDataModule
-from image_classification_simulation.data.fsl_sampler import TaskSampler
+from image_classification_simulation.data.samplers import TaskSampler
 from transformers import ViTFeatureExtractor
+from image_classification_simulation.data.samplers import StratifiedBatchSampler
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
@@ -125,7 +126,9 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         # get number of class from ImageFolder object
         self.num_classes = len(self.dataset.classes)
         hyper_params["num_classes"] = self.num_classes
-
+        self.stratified_sampler = StratifiedBatchSampler(
+            self.get_labels(), batch_size=hyper_params["batch_size"]
+        )
 
     def get_labels(self):
         """Returns the labels of the dataset.
@@ -136,6 +139,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             List of labels of the dataset.
         """
         self.labels = [label for img, label in self.dataset]
+        return self.labels
 
     def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
