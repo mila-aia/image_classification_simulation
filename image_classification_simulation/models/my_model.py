@@ -65,6 +65,17 @@ class BaseModel(pl.LightningModule):
         loss = self._generic_step(batch, batch_idx)
         self.log("test_loss", loss)
 
+    def extract_features(
+        self, batch: torch.Tensor
+    ) -> typing.Union[torch.Tensor, None]:
+        """Extracts features from the model."""
+        if hasattr(self, "feature_extractor"):
+            z_x = self.feature_extractor.forward(batch)
+            z_x = self.flatten(z_x)
+            return z_x
+        else:
+            raise Exception("No feature extractor found.")
+
 
 class MyModel(BaseModel):  # pragma: no cover
     """Simple Model Class.

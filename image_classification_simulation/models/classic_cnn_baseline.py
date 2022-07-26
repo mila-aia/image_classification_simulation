@@ -20,7 +20,8 @@ class ClassicCNN(BaseModel):
             A dictionary of hyperparameters
         """
         super(ClassicCNN, self).__init__()
-        check_and_log_hp(["num_classes"], hyper_params)
+        expected_hparams = {"num_classes", "img_size", "num_channels"}
+        check_and_log_hp(expected_hparams, hyper_params)
 
         self.save_hyperparameters(
             hyper_params
@@ -33,10 +34,16 @@ class ClassicCNN(BaseModel):
         else:
             self.num_filters = 8
 
+        if "dropout_value" in hyper_params:
+            self.dropout_value = hyper_params["dropout_value"]
+        else:
+            self.dropout_value = 0.1
+
         # defining network layers
         self.flatten = nn.Flatten()
         self.activation = nn.ReLU()
         self.maxpooling = nn.MaxPool2d(2, 2)
+        self.dropout = nn.Dropout2d(self.dropout_value)
 
         self.conv1 = nn.Conv2d(
             hyper_params["num_channels"],
@@ -80,6 +87,13 @@ class ClassicCNN(BaseModel):
             padding=1,
         )
 
+        self.bn1 = nn.BatchNorm2d(self.num_filters)
+        self.bn2 = nn.BatchNorm2d(self.num_filters * 2)
+        self.bn3 = nn.BatchNorm2d(self.num_filters * 4)
+        self.bn4 = nn.BatchNorm2d(self.num_filters * 4)
+        self.bn5 = nn.BatchNorm2d(self.num_filters * 8)
+        self.bn6 = nn.BatchNorm2d(self.num_filters * 8)
+
         def get_output_shape(model, image_dim):
             return model(torch.rand(*(image_dim))).data.shape
 
@@ -108,7 +122,61 @@ class ClassicCNN(BaseModel):
 
         self.linear1 = nn.Linear(fc_size, 256)
         self.linear2 = nn.Linear(256, 128)
+
         self.linear3 = nn.Linear(128, hyper_params["num_classes"])
+
+        self.block1 = nn.Sequential(
+            self.conv1,
+            self.bn1,
+            self.activation,
+            self.dropout,
+            self.conv2,
+            self.bn2,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
+        self.block2 = nn.Sequential(
+            self.conv3,
+            self.bn3,
+            self.activation,
+            self.dropout,
+            self.conv4,
+            self.bn4,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
+        self.block3 = nn.Sequential(
+            self.conv5,
+            self.bn5,
+            self.activation,
+            self.dropout,
+            self.conv6,
+            self.bn6,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
+        self.fc_block = nn.Sequential(
+            self.flatten,
+            self.linear1,
+            self.activation,
+            self.linear2,
+            self.activation,
+        )
+
+        self.feature_extractor = nn.Sequential(
+            self.block1,
+            self.block2,
+            self.block3,
+            self.fc_block,
+        )
+
+        self.classifier = self.linear3
 
     def _generic_step(self, batch: typing.Any, batch_idx: int) -> typing.Any:
         """Runs the prediction + evaluation step for training/validation/testing.
@@ -169,10 +237,13 @@ class ClassicCNN(BaseModel):
             loss produced by the loss function.
         """
         loss, logits = self._generic_step(batch, batch_idx)
+        input_data, targets = batch
+        train_acc = self.compute_accuracy(logits, targets)
         self.log("train_loss", loss)
+        self.log("train_acc", train_acc)
         self.log("epoch", self.current_epoch)
         self.log("step", self.global_step)
-        return loss
+        return {"loss": loss, "acc": train_acc}
 
     def validation_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -196,6 +267,7 @@ class ClassicCNN(BaseModel):
         val_acc = self.compute_accuracy(logits, targets)
         self.log("val_loss", loss)
         self.log("val_acc", val_acc)
+        return val_acc
 
     def test_step(
         self, batch: torch.Tensor, batch_idx: torch.Tensor
@@ -219,6 +291,7 @@ class ClassicCNN(BaseModel):
         test_acc = self.compute_accuracy(logits, targets)
         self.log("test_loss", loss)
         self.log("test_acc", test_acc)
+        return test_acc
 
     def forward(self, batch_images: torch.Tensor) -> torch.Tensor:
         """Passes a batch of data to the model.
@@ -235,47 +308,34 @@ class ClassicCNN(BaseModel):
         """
         # print(batch_images.shape)
 
-        # Block 1
-        z_x = self.conv1(batch_images)
-        z_x = self.activation(z_x)
-        z_x = self.conv2(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.maxpooling(z_x)
-
-        # Block 2
-        z_x = self.conv3(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.conv4(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.maxpooling(z_x)
-
-        # Block 3
-        z_x = self.conv5(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.conv6(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.maxpooling(z_x)
-
-        # Fully connected block
-        z_x = self.flatten(z_x)
-        z_x = self.linear1(z_x)
-        z_x = self.activation(z_x)
-        z_x = self.linear2(z_x)
-        z_x = self.activation(z_x)
-        logits = self.linear3(z_x)
+        # Conv. blocks
+        z_x = self.block1(batch_images)
+        z_x = self.block2(z_x)
+        z_x = self.block3(z_x)
+        z_x = self.fc_block(z_x)
+        logits = self.classifier(z_x)
 
         return logits
 
 
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    hparams = {"num_classes": 10, "loss": "CrossEntropyLoss", "pretrained": True}
+    hparams = {
+        "num_classes": 10,
+        "img_size": 300,
+        "num_channels": 3,
+        "loss": "CrossEntropyLoss",
+        "pretrained": True,
+    }
     model = ClassicCNN(hparams).to(device)
     print(model)
     # generate a random image to test the module
-    img = torch.rand((3, 3, 1024, 1024))
-    label = torch.randint(0, 10, (3,))
+    img = torch.rand((3, 3, 300, 300)).to(device)
+    label = torch.randint(0, 10, (3,)).to(device)
     print(model(img).shape)
 
     loss = model.training_step((img, label), None)
     print(loss)
+
+    features = model.extract_features(img)
+    print(features.shape)

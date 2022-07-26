@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, random_split
 from image_classification_simulation.data.data_loader import MyDataModule
 from image_classification_simulation.data.fsl_sampler import TaskSampler
 from transformers import ViTFeatureExtractor
-from image_classification_simulation.data.utils import StratifiedBatchSampler
+
 
 class Office31Loader(MyDataModule):  # pragma: no cover
     """Data module class.
@@ -113,6 +113,10 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             root=self.data_dir, transform=self.train_set_transformation
         )
 
+        # get number of class from ImageFolder object
+        self.num_classes = len(self.dataset.classes)
+        hyper_params["num_classes"] = self.num_classes
+
         if eval_dir is not None:
             self.eval_dataset = ImageFolder(
                 root=eval_dir, transform=self.train_set_transformation
@@ -121,9 +125,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         # get number of class from ImageFolder object
         self.num_classes = len(self.dataset.classes)
         hyper_params["num_classes"] = self.num_classes
-        self.stratified_sampler = StratifiedBatchSampler(
-            self.get_labels(), batch_size=hyper_params["batch_size"]
-        )
+
 
     def get_labels(self):
         """Returns the labels of the dataset.
