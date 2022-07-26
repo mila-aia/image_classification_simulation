@@ -290,6 +290,7 @@ class ImageSimilaritySearch:
         return indices.cpu().numpy().tolist()
 
     def build_representations(self):
+        """Build representations for the dataset."""
         features = []
         for batch_img, batch_labels in self.image_dataloader:
             batch_features = self.extract_features(batch_img)
@@ -299,4 +300,5 @@ class ImageSimilaritySearch:
         return features.cpu()
 
     def find_neighbors(self, X, y):
+        """Find neighbors for each sample""".
         self.clustering.fit(self.dist_matrix, y)
