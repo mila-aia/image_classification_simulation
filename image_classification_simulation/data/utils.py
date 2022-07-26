@@ -9,7 +9,8 @@ from image_classification_simulation.data.office31_loader import (
 from image_classification_simulation.data.flowers102_loader import (
     Flowers102Loader,
 )
-        
+
+
 def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
     """Prepare the data into datasets.
 
@@ -43,6 +44,7 @@ def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover
         return MNISTLoader(data_dir, hyper_params)
     else:
         return MyDataModule(data_dir, hyper_params)
+
 
 if __name__ == "__main__":
     data_dir = "./data"

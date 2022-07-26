@@ -135,12 +135,12 @@ def get_clustering_alg(hparams: dict):
             # threshold=12.5,
             n_clusters=hparams["num_clusters"]
         )
-    if hparams['clustering_alg'] == 'knn':
+    if hparams["clustering_alg"] == "knn":
         clustering_alg = KNeighborsClassifier(
-            n_neighbors=hparams['num_neighbors'],
+            n_neighbors=hparams["num_neighbors"],
             weights="distance",
-            metric="precomputed"
-            )
+            metric="precomputed",
+        )
     return clustering_alg
 
 

@@ -1,4 +1,3 @@
-from re import U
 import typing
 import numpy as np
 import torch
@@ -9,7 +8,9 @@ from torch.utils.data import DataLoader, random_split
 from image_classification_simulation.data.data_loader import MyDataModule
 from image_classification_simulation.data.samplers import TaskSampler
 from transformers import ViTFeatureExtractor
-from image_classification_simulation.data.samplers import StratifiedBatchSampler
+from image_classification_simulation.data.samplers import (
+    StratifiedBatchSampler,
+)
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
@@ -59,9 +60,9 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         Parameters
         ----------
         data_dir : string
-            Directory path that the data will be downloaded and stored
+            Directory path of the training subset.
         eval_dir : string
-            Directory path that the evaluation data will be downloaded and stored
+            Directory path of the evaluation subset
         hyper_params : dictionary
             Hyperparameters relevant to the dataloader module.
         """
@@ -153,7 +154,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         test_size : float, optional
             Fraction of the dataset to be used for testing, by default 0.1
         """
-        if stage == 'fit' or stage == 'test':
+        if stage == "fit" or stage == "test":
             n_val = int(np.floor(self.train_test_split * len(self.dataset)))
             n_test = int(np.floor(self.train_test_split * len(self.dataset)))
 
@@ -162,9 +163,9 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.train_set, self.val_set, self.test_set = random_split(
                 self.dataset, [n_train, n_val, n_test]
             )
-        if stage == 'infer':
+        if stage == "infer":
             self.train_set = self.dataset
-        elif stage == 'eval':
+        elif stage == "eval":
             self.eval_set = self.eval_dataset
 
     def train_dataloader(self) -> DataLoader:
@@ -179,7 +180,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.train_set,
             batch_size=self.batch_size,
             shuffle=True,
-            batch_sampler= None,
+            batch_sampler=None,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
@@ -220,7 +221,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             pin_memory=True,
             collate_fn=None,
         )
-    
+
     def eval_dataloader(self) -> DataLoader:
         """Creates the evaluation dataloader using the evaluation data parser.
 
