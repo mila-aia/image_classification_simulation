@@ -124,7 +124,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         self.num_classes = len(self.dataset.classes)
         hyper_params["num_classes"] = self.num_classes
 
-        labels = [label for img, label in self.dataset]
         self.stratified_sampler = StratifiedBatchSampler(
             self.get_labels(), self.batch_size, shuffle=True
         )

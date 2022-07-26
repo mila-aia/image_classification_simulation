@@ -12,7 +12,8 @@ from sklearn.model_selection import StratifiedKFold
 
 
 class StratifiedBatchSampler:
-    """Stratified batch sampling
+    """Stratified batch sampling.
+    
     Provides equal representation of target classes in each batch
     """
 
