@@ -1,14 +1,20 @@
 # general
 batch_size: 32
-optimizer: adam
-loss: L1
-patience: 5
-architecture: my_model
-max_epoch: 99
-exp_name: my_exp_1
+optimizer: adamW
+loss: CrossEntropyLoss
+patience: 10
+lr: 'orion~loguniform(1e-5, 1.0)'
+architecture: classic-cnn
+pretrained: False
+max_epoch: 10
+exp_name: cnn_test_exp
+img_size: 224
+num_classes: 31
+num_channels: 3
+# dataset
+data: Office31
 # set to null to avoid setting a seed (can speed up GPU computation, but
 # results will not be reproducible)
 seed: 1234
-
 # architecture
-size: 'orion~uniform(1,100,discrete=True)'
+num_filters: 'orion~choices([2, 4, 8])'

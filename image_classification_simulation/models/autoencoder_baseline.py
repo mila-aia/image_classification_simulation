@@ -60,7 +60,23 @@ class ConvAutoEncoder(BaseModel):
             padding=1,
         )
 
+        self.conv4 = nn.Conv2d(
+            self.num_filters // 4,
+            self.num_filters // 8,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+
         self.deconv1 = nn.ConvTranspose2d(
+            self.num_filters // 8,
+            self.num_filters // 4,
+            kernel_size=2,
+            stride=2,
+            padding=0,
+        )
+
+        self.deconv2 = nn.ConvTranspose2d(
             self.num_filters // 4,
             self.num_filters // 2,
             kernel_size=2,
@@ -68,7 +84,7 @@ class ConvAutoEncoder(BaseModel):
             padding=0,
         )
 
-        self.deconv2 = nn.ConvTranspose2d(
+        self.deconv3 = nn.ConvTranspose2d(
             self.num_filters // 2,
             self.num_filters,
             kernel_size=2,
@@ -76,7 +92,7 @@ class ConvAutoEncoder(BaseModel):
             padding=0,
         )
 
-        self.deconv3 = nn.ConvTranspose2d(
+        self.deconv4 = nn.ConvTranspose2d(
             self.num_filters,
             hyper_params["num_channels"],
             kernel_size=2,
@@ -94,6 +110,9 @@ class ConvAutoEncoder(BaseModel):
             self.conv3,
             nn.ReLU(),
             self.pooling,
+            self.conv4,
+            nn.ReLU(),
+            self.pooling,
         )
 
         self.decoder = nn.Sequential(
@@ -102,6 +121,8 @@ class ConvAutoEncoder(BaseModel):
             self.deconv2,
             nn.ReLU(),
             self.deconv3,
+            nn.ReLU(),
+            self.deconv4,
             nn.Sigmoid(),
         )
 
