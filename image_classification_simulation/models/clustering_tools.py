@@ -4,10 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
-from sklearn.cluster import MiniBatchKMeans
-from sklearn.cluster import Birch
 from sklearn import metrics
-from sklearn.neighbors import KNeighborsClassifier
 
 
 def get_clustering_metrics(
@@ -112,36 +109,6 @@ def show_images_in_clusters(
         )
         images_in_cluster = np.array(images)[predicted_clusters == num]
         show_grid_images(images_in_cluster.tolist(), num)
-
-
-def get_clustering_alg(hparams: dict):
-    """Initialize the class.
-
-    Parameters
-    ----------
-    hparams : dict
-        hyperparameters
-    """
-    if hparams["clustering_alg"] == "MiniBatchKMeans":
-        clustering_alg = MiniBatchKMeans(
-            n_clusters=hparams["num_clusters"],
-            random_state=hparams["random_state"],
-            batch_size=hparams["clustering_batch_size"],
-            reassignment_ratio=hparams["reassignment_ratio"],
-            verbose=1,
-        )
-    if hparams["clustering_alg"] == "BIRCH":
-        clustering_alg = Birch(
-            # threshold=12.5,
-            n_clusters=hparams["num_clusters"]
-        )
-    if hparams["clustering_alg"] == "knn":
-        clustering_alg = KNeighborsClassifier(
-            n_neighbors=hparams["num_neighbors"],
-            weights="distance",
-            metric="precomputed",
-        )
-    return clustering_alg
 
 
 def get_inertia(clustering_alg):
