@@ -6,7 +6,10 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, random_split
 from image_classification_simulation.data.data_loader import MyDataModule
-from image_classification_simulation.data.fsl_sampler import TaskSampler
+from image_classification_simulation.data.samplers import (
+    TaskSampler,
+    StratifiedBatchSampler,
+)
 from transformers import ViTFeatureExtractor
 
 
@@ -49,6 +52,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         self,
         data_dir: typing.AnyStr,
         hyper_params: typing.Dict[typing.AnyStr, typing.Any],
+        eval_dir: typing.AnyStr = None,
     ):
         """Validates the hyperparameter config dictionary and\
              sets up internal attributes.
@@ -57,6 +61,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         ----------
         data_dir : string
             Directory path that the data will be downloaded and stored
+        eval_dir : string
+            Directory path that the evaluation data will be downloaded and stored
         hyper_params : dictionary
             Hyperparameters relevant to the dataloader module.
         """
@@ -98,13 +104,34 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             ]
         )
 
+        self.inference_transformation = transforms.Compose(
+            [
+                transforms.Resize((self.image_size, self.image_size)),
+                transforms.ToTensor(),
+            ]
+        )
+
         self.dataset = ImageFolder(
             root=self.data_dir, transform=self.train_set_transformation
         )
 
+        if eval_dir is not None:
+            self.eval_dataset = ImageFolder(
+                root=eval_dir, transform=self.train_set_transformation
+            )
+
         # get number of class from ImageFolder object
         self.num_classes = len(self.dataset.classes)
         hyper_params["num_classes"] = self.num_classes
+
+        self.stratified_sampler = StratifiedBatchSampler(
+            self.get_labels(), self.batch_size, shuffle=True
+        )
+
+    def get_labels(self):
+        """Returns the labels of the dataset."""
+        self.labels = [label for img, label in self.dataset]
+        return self.labels
 
     def setup(self, stage: str = None):
         """Parses and splits all samples across the train/valid/test parsers.
@@ -118,14 +145,19 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         test_size : float, optional
             Fraction of the dataset to be used for testing, by default 0.1
         """
-        n_val = int(np.floor(self.train_test_split * len(self.dataset)))
-        n_test = int(np.floor(self.train_test_split * len(self.dataset)))
+        if stage == "fit" or stage == "test":
+            n_val = int(np.floor(self.train_test_split * len(self.dataset)))
+            n_test = int(np.floor(self.train_test_split * len(self.dataset)))
 
-        n_train = len(self.dataset) - n_val - n_test
+            n_train = len(self.dataset) - n_val - n_test
 
-        self.train_set, self.val_set, self.test_set = random_split(
-            self.dataset, [n_train, n_val, n_test]
-        )
+            self.train_set, self.val_set, self.test_set = random_split(
+                self.dataset, [n_train, n_val, n_test]
+            )
+        if stage == "infer":
+            self.train_set = self.dataset
+        elif stage == "eval":
+            self.eval_set = self.eval_dataset
 
     def train_dataloader(self) -> DataLoader:
         """Creates the training dataloader using the training data parser.
@@ -138,7 +170,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         return DataLoader(
             self.train_set,
             batch_size=self.batch_size,
-            batch_sampler=None,
+            shuffle=True,
+            batch_sampler=None,  # self.ssampler,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
@@ -155,6 +188,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         return DataLoader(
             self.val_set,
             batch_size=self.batch_size,
+            shuffle=True,
             batch_sampler=None,
             num_workers=self.num_workers,
             pin_memory=True,
@@ -173,6 +207,25 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.test_set,
             batch_size=self.batch_size,
             batch_sampler=None,
+            shuffle=True,
+            num_workers=self.num_workers,
+            pin_memory=True,
+            collate_fn=None,
+        )
+
+    def eval_dataloader(self) -> DataLoader:
+        """Creates the evaluation dataloader using the evaluation data parser.
+
+        Returns
+        -------
+        DataLoader
+            returns a pytorch DataLoader class
+        """
+        return DataLoader(
+            self.eval_set,
+            batch_size=self.batch_size,
+            batch_sampler=None,
+            shuffle=True,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
@@ -375,6 +428,10 @@ class Office31LoaderViT(Office31Loader):  # pragma: no cover
 if __name__ == "__main__":
     # tests the dataloader module
     args = {"batch_size": 8}
+    office31_loader = Office31Loader(
+        "./examples/data/domain_adaptation_images/amazon/images",
+        args,
+    )
     office31_loader = Office31LoaderViT(
         "./examples/data/domain_adaptation_images/amazon/images",
         args,
