@@ -18,7 +18,7 @@ class StratifiedBatchSampler:
 
     def __init__(self, y, batch_size, shuffle=True):
         """Initialize the class.
-        
+
         Parameters
         ----------
         y : torch.Tensor

@@ -11,9 +11,6 @@ from image_classification_simulation.data.samplers import (
     StratifiedBatchSampler,
 )
 from transformers import ViTFeatureExtractor
-from image_classification_simulation.data.samplers import (
-    StratifiedBatchSampler,
-)
 
 
 class Office31Loader(MyDataModule):  # pragma: no cover
@@ -229,25 +226,6 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             batch_size=self.batch_size,
             shuffle=True,
             batch_sampler=None,
-            shuffle=True,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            collate_fn=None,
-        )
-
-    def eval_dataloader(self) -> DataLoader:
-        """Creates the evaluation dataloader using the evaluation data parser.
-
-        Returns
-        -------
-        DataLoader
-            returns a pytorch DataLoader class
-        """
-        return DataLoader(
-            self.eval_set,
-            batch_size=self.batch_size,
-            batch_sampler=None,
-            shuffle=True,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,

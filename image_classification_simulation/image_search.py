@@ -300,5 +300,5 @@ class ImageSimilaritySearch:
         return features.cpu()
 
     def find_neighbors(self, X, y):
-        """Find neighbors for each sample"""
+        """Find neighbors for each sample."""
         self.clustering.fit(self.dist_matrix, y)
