@@ -4,11 +4,8 @@ import torch
 import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
-from image_classification_simulation.models.clustering_tools import (
-    get_clustering_alg,
-)
 from image_classification_simulation.models.model_loader import load_model
-
+from image_classification_simulation.models.clustering import Clustering
 
 def batchify(iterable: typing.Iterable, batch_size: int = 32):
     """Yield successive n-sized batches from lst.
@@ -59,32 +56,38 @@ class ImageSimilaritySearch:
         self.model.eval()
 
         self.dataset_cluster_ids = None
-        self.clustering = get_clustering_alg(hparams)
+        self.clustering = Clustering(self.extract_features,hparams)
 
         # dataset and transformations are the only
         # things we need from the DataModule
         self.image_dataloader = DataLoader(
             DataModule.dataset, batch_size=self.batch_size
         )
-        self.labels = [label for img, label in DataModule.dataset]
+        self.dataset = pd.DataFrame(
+            self.image_dataloader.dataset.samples,
+            columns=["image_path", "class_label"],
+        )
+        self.labels = self.image_dataloader.get_labels()
 
         self.transformation = DataModule.inference_transformation
 
-    def setup(self, alg="knn"):
+    def setup(self):
         """Setup the ImageSimilaritySearch class."""
-        if alg == "kmeans":
-            self.fit(self.image_dataloader)
+        if self.clustering.alg_type == "MiniBatchKMeans":
+            self.clustering.fit_loader(self.image_dataloader)
         else:
-            self.features = self.build_representations()
-            self.find_neighbors(self.features, self.labels)
+            features = self.build_representations()
+            dist_m = self.clustering.build_dist_matrix(features)
+            self.clustering.fit(dist_m, self.labels)
         # cannot have the cluster ids loaded since the model cannot be used
         # if self.dataset_cluster_ids is None:
-        self.dataset_cluster_ids = self.predict(
-            dataloader=self.image_dataloader
-        )
-        self.save_cluster_ids_to_file(self.path_cluster_ids)
-        # else:
-        #     self.load_cluster_ids_from_file(self.path_cluster_ids)
+        if self.clustering.alg_type != "nn":
+            self.dataset_cluster_ids = self.clustering.predict_loader(
+                dataloader=self.image_dataloader
+            )
+            self.save_cluster_ids_to_file(self.path_cluster_ids)
+            # else:
+            #     self.load_cluster_ids_from_file(self.path_cluster_ids)
         print(">>> setup completed successfully!")
 
     def save_cluster_ids_to_file(
@@ -97,10 +100,6 @@ class ImageSimilaritySearch:
         path : str, optional
             Path to the file. The default is "./dataset_cluster_ids.csv".
         """
-        self.dataset = pd.DataFrame(
-            self.image_dataloader.dataset.samples,
-            columns=["image_path", "class_label"],
-        )
         self.dataset["cluster_id"] = self.dataset_cluster_ids
         self.dataset.to_csv(path, index=False)
         print(">>> saved cluster ids to file")
@@ -158,61 +157,6 @@ class ImageSimilaritySearch:
         features = features.detach()
         return features
 
-    def fit(self, dataloader: DataLoader):
-        """Fit the clustering algorithm.
-
-        Parameters
-        ----------
-        dataloader : DataLoader
-            dataloader can be train, validation or test dataloader
-        """
-        for batch_images, batch_labels in dataloader:
-            features = self.extract_features(batch_images)
-            features = features.cpu().numpy()
-            self.clustering.partial_fit(features)
-
-    def predict(self, dataloader: DataLoader) -> np.ndarray:
-        """Predict the clusters for batch of images in the dataloader.
-
-        Parameters
-        ----------
-        dataloader : DataLoader
-            dataloader can be train, validation or test dataloader
-
-        Returns
-        -------
-        np.ndarray
-            predicted clusters ids
-        """
-        predicted_clusters = []
-        for batch_images, batch_labels in dataloader:
-            features = self.extract_features(batch_images)
-            features = features.cpu()  # .numpy()
-            dist = torch.cdist(features, self.features)
-            _ = self.clustering.predict(dist)
-            predicted_clusters.extend(_)
-        return np.array(predicted_clusters)
-
-    def predict_one_image(self, image: torch.Tensor) -> int:
-        """Predict the clusters for one image.
-
-        Parameters
-        ----------
-        image : torch.Tensor
-            image to predict the clusters
-
-        Returns
-        -------
-        int
-            predicted cluster id
-        """
-        # model needs the image to be a batch of size 1
-        features = self.extract_features(image)
-        features = features.cpu()  # .numpy()
-        dist = torch.cdist(features, self.features)
-        cluster_id = self.clustering.predict(dist)
-        return cluster_id.item()
-
     def find_similar_images(
         self, path_to_image: str, topk: int = None
     ) -> pd.DataFrame:
@@ -231,17 +175,19 @@ class ImageSimilaritySearch:
             A DataFrame object containing similar images.
         """
         image = self.preprocess_image(path_to_image)
-        target_cluster_id = self.predict_one_image(image)
-        query_indices = self.dataset["cluster_id"] == target_cluster_id
-        query_image_paths = self.dataset[query_indices]["image_path"].values
-        # self.dataset.groupby('cluster_id').count()
-        if topk:
-            query_indices = self.sort_query_result(
-                image, query_image_paths, topk
-            )
-            return self.dataset.iloc[query_indices]
+        if self.clustering.alg_type == "nn":
+            query_indices = self.clustering.find_neighbors(image, topk)
         else:
-            return self.dataset[query_indices]
+            target_cluster_id = self.clustering.predict(image)
+            query_indices = self.dataset["cluster_id"] == target_cluster_id
+            if topk:
+                query_indices = self.sort_query_result(
+                    image, query_image_paths, topk
+                )
+
+        query_image_paths = self.dataset.iloc[query_indices]
+        # self.dataset.groupby('cluster_id').count()
+        return query_image_paths
 
     def sort_query_result(
         self,
@@ -289,7 +235,7 @@ class ImageSimilaritySearch:
             values, indices = torch.topk(-dist, k=len(query_image_paths))
         return indices.cpu().numpy().tolist()
 
-    def build_representations(self):
+    def build_representations(self) -> torch.Tensor:
         """Build representations for the dataset."""
         features = []
         for batch_img, batch_labels in self.image_dataloader:
@@ -298,7 +244,3 @@ class ImageSimilaritySearch:
         features = torch.cat(features)
         self.dist_matrix = torch.cdist(features, features).cpu()
         return features.cpu()
-
-    def find_neighbors(self, X, y):
-        """Find neighbors for each sample."""
-        self.clustering.fit(self.dist_matrix, y)
