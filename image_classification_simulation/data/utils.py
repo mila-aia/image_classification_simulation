@@ -1,14 +1,14 @@
+from image_classification_simulation.data.data_loader import MyDataModule
+from image_classification_simulation.data.omniglot_loader import OmniglotLoader
+from image_classification_simulation.data.mnist_loader import MNISTLoader
 from image_classification_simulation.data.office31_loader import (
     Office31FewshotLoader,
     Office31LoaderViT,
     Office31Loader,
 )
-from image_classification_simulation.data.omniglot_loader import OmniglotLoader
-from image_classification_simulation.data.mnist_loader import MNISTLoader
 from image_classification_simulation.data.flowers102_loader import (
     Flowers102Loader,
 )
-from image_classification_simulation.data.data_loader import MyDataModule
 
 
 def load_data(data_dir: str, hyper_params: dict):  # pragma: no cover

@@ -7,6 +7,7 @@ from torchvision.utils import make_grid
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
 from sklearn import metrics
+from sklearn.neighbors import KNeighborsClassifier
 
 
 def get_clustering_metrics(
@@ -133,6 +134,12 @@ def get_clustering_alg(hparams: dict):
         clustering_alg = Birch(
             # threshold=12.5,
             n_clusters=hparams["num_clusters"]
+        )
+    if hparams["clustering_alg"] == "knn":
+        clustering_alg = KNeighborsClassifier(
+            n_neighbors=hparams["num_neighbors"],
+            weights="distance",
+            metric="precomputed",
         )
     return clustering_alg
 

@@ -26,7 +26,11 @@ def batchify(iterable: typing.Iterable, batch_size: int = 32):
         batches of elements
     """
     for i in range(0, len(iterable), batch_size):
+<<<<<<< HEAD
         yield iterable[i: i + batch_size]
+=======
+        yield iterable[i : i + batch_size]
+>>>>>>> transfer_learning
 
 
 class ImageSimilaritySearch:
@@ -66,12 +70,26 @@ class ImageSimilaritySearch:
         self.image_dataloader = DataLoader(
             DataModule.dataset, batch_size=self.batch_size
         )
+<<<<<<< HEAD
         self.transformation = DataModule.train_set_transformation
+=======
+        self.labels = [label for img, label in DataModule.dataset]
 
-    def setup(self):
+        self.transformation = DataModule.inference_transformation
+>>>>>>> transfer_learning
+
+    def setup(self, alg="knn"):
         """Setup the ImageSimilaritySearch class."""
+<<<<<<< HEAD
         self.fit(self.image_dataloader)
 
+=======
+        if alg == "kmeans":
+            self.fit(self.image_dataloader)
+        else:
+            self.features = self.build_representations()
+            self.find_neighbors(self.features, self.labels)
+>>>>>>> transfer_learning
         # cannot have the cluster ids loaded since the model cannot be used
         # if self.dataset_cluster_ids is None:
         self.dataset_cluster_ids = self.predict(
@@ -182,8 +200,14 @@ class ImageSimilaritySearch:
         predicted_clusters = []
         for batch_images, batch_labels in dataloader:
             features = self.extract_features(batch_images)
+<<<<<<< HEAD
             features = features.cpu().numpy()
             _ = self.clustering.predict(features)
+=======
+            features = features.cpu()  # .numpy()
+            dist = torch.cdist(features, self.features)
+            _ = self.clustering.predict(dist)
+>>>>>>> transfer_learning
             predicted_clusters.extend(_)
         return np.array(predicted_clusters)
 
@@ -202,12 +226,22 @@ class ImageSimilaritySearch:
         """
         # model needs the image to be a batch of size 1
         features = self.extract_features(image)
+<<<<<<< HEAD
         features = features.cpu().numpy()
         cluster_id = self.clustering.predict(features)
         return cluster_id.item()
 
     def find_similar_images(
         self, path_to_image: str, topk: int = 5
+=======
+        features = features.cpu()  # .numpy()
+        dist = torch.cdist(features, self.features)
+        cluster_id = self.clustering.predict(dist)
+        return cluster_id.item()
+
+    def find_similar_images(
+        self, path_to_image: str, topk: int = None
+>>>>>>> transfer_learning
     ) -> pd.DataFrame:
         """Find similar images to a given image.
 
@@ -227,7 +261,11 @@ class ImageSimilaritySearch:
         target_cluster_id = self.predict_one_image(image)
         query_indices = self.dataset["cluster_id"] == target_cluster_id
         query_image_paths = self.dataset[query_indices]["image_path"].values
+<<<<<<< HEAD
 
+=======
+        # self.dataset.groupby('cluster_id').count()
+>>>>>>> transfer_learning
         if topk:
             query_indices = self.sort_query_result(
                 image, query_image_paths, topk
@@ -281,3 +319,20 @@ class ImageSimilaritySearch:
         else:
             values, indices = torch.topk(-dist, k=len(query_image_paths))
         return indices.cpu().numpy().tolist()
+<<<<<<< HEAD
+=======
+
+    def build_representations(self):
+        """Build representations for the dataset."""
+        features = []
+        for batch_img, batch_labels in self.image_dataloader:
+            batch_features = self.extract_features(batch_img)
+            features.append(batch_features)
+        features = torch.cat(features)
+        self.dist_matrix = torch.cdist(features, features).cpu()
+        return features.cpu()
+
+    def find_neighbors(self, X, y):
+        """Find neighbors for each sample"""
+        self.clustering.fit(self.dist_matrix, y)
+>>>>>>> transfer_learning

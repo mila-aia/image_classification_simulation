@@ -7,6 +7,46 @@ from torch.utils.data import Sampler
 from torch.utils.data import DataLoader
 
 # from easyfsl.datasets import FewShotDataset
+from sklearn.model_selection import StratifiedKFold
+
+
+class StratifiedBatchSampler:
+    """Stratified batch sampling.
+
+    Provides equal representation of target classes in each batch
+    """
+
+    def __init__(self, y, batch_size, shuffle=True):
+        """Initialize the class.
+        
+        Parameters
+        ----------
+        y : torch.Tensor
+            target labels
+        batch_size : int
+            batch size
+        shuffle : bool
+            whether to shuffle the data
+        """
+        if torch.is_tensor(y):
+            y = y.numpy()
+        # assert len(y.shape) == 1, 'label array must be 1D'
+        n_batches = int(len(y) / batch_size)
+        self.skf = StratifiedKFold(n_splits=n_batches, shuffle=shuffle)
+        self.X = torch.randn(len(y), 1).numpy()
+        self.y = y
+        self.shuffle = shuffle
+
+    def __iter__(self):
+        """Creates a sampler iterator."""
+        if self.shuffle:
+            self.skf.random_state = torch.randint(0, int(1e8), size=()).item()
+        for train_idx, test_idx in self.skf.split(self.X, self.y):
+            yield test_idx
+
+    def __len__(self):
+        """Returns the number of batches."""
+        return len(self.y)
 
 
 class TaskSampler(Sampler):
@@ -121,11 +161,11 @@ class TaskSampler(Sampler):
         support_images = all_images[:, : self.n_shot].reshape(
             (-1, *all_images.shape[2:])
         )
-        query_images = all_images[:, self.n_shot:].reshape(
+        query_images = all_images[:, self.n_shot :].reshape(
             (-1, *all_images.shape[2:])
         )
         support_labels = all_labels[:, : self.n_shot].flatten()
-        query_labels = all_labels[:, self.n_shot:].flatten()
+        query_labels = all_labels[:, self.n_shot :].flatten()
 
         return (
             support_images,
