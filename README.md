@@ -1,173 +1,91 @@
 # image_classification_simulation
 
 
-Simulation project to classify user images into a catalog of existing classes.
+This project implements a set of tools and models to perform multiclass classification of images.
 
+Use Case: classifying client test images based on a catalog of available products.
 
-* Free software: MIT license
+## Setup
 
+### Clone the repository:
 
-
-## Instructions to setup the project
+    git clone https://github.com/mila-aia/image_classification_simulation.git
 
 ### Install the dependencies:
-(remember to activate the virtual env if you want to use one)
-Add new dependencies (if needed) to setup.py.
+(it is strongly recommended to create and/or activate a virtual environment before this step)
+
+Go to the folder of the repository and run the following command:
 
     pip install -e .
 
-### Add git:
+## Documentation
 
-    git init
+### Overview of the framework
 
-### Setup pre-commit hooks:
-These hooks will:
-* validate flake8 before any commit
-* check that jupyter notebook outputs have been stripped
+![Fig0](docs/figures/fig0.jpg)
 
-    cd .git/hooks/ && ln -s ../../config/hooks/pre-commit . && cd -
+### Datasets
 
-### Commit the code
+#### Office31 Dataset
 
-    git add .
-    git commit -m 'first commit'
+The main dataset used in this repository is the Office31 dataset. The dataset can be downloaded from this [link](https://drive.google.com/file/d/0B4IapRTv9pJ1WGZVd1VDMmhwdlE/view?resourcekey=0-gNMHVtZfRAyO_t2_WrOunA). It it recommended to move the dataset under `/examples/data` after downloading and unzipping it. The [Office31 Dataloader](/image_classification_simulation/data/office31_loader.py) will then take care of the processing of the data for training/testing with the available models.
 
-### Link github to your local repository
-Go on github and follow the instructions to create a new project.
-When done, do not add any file, and follow the instructions to
-link your local git to the remote project, which should look like this:
-(PS: these instructions are reported here for your convenience.
-We suggest to also look at the GitHub project page for more up-to-date info)
+#### Other Datasets
 
-    git remote add origin git@github.com:alzaia/image_classification_simulation.git
-    git branch -M main
-    git push -u origin main
+Other open-source datasets are available and can be used with the models implemented in the repository:
 
-### Setup Continuous Integration
+* [MNIST](/image_classification_simulation/data/mnist_loader.py)
+* [Flowers102](/image_classification_simulation/data/flowers102_loader.py)
+* [Omniglot](/image_classification_simulation/data/omniglot_loader.py)
 
-Continuous integration will run the following:
-- Unit tests under `tests`.
-- End-to-end test under `exmaples/local`.
-- `flake8` to check the code syntax.
-- Checks on documentation presence and format (using `sphinx`).
+### Models
 
-We support the following Continuous Integration providers.
-Check the following instructions for more details.
+#### Models for end-to-end classification
 
-#### GitHub Actions
+* [Standard CNN baseline](/image_classification_simulation/models/classic_cnn_baseline.py): Classic CNN architecture consisting of a succession of convolutional & pooling layers and ending with 3 fully connected linear layers. It includes batch normalization and dropout layers for regularization.
+* [ResNet baseline](/image_classification_simulation/models/resnet_baseline.py): Pre-trained ResNet18 architecture that can be fine-tuned (transfer learning) for downstream classification tasks on new image datasets.
+* [Vision Transformer baseline](/image_classification_simulation/models/vit_baseline.py): Pre-trained Vision Transformer (ViT) architecture from HuggingFace that can be fine-tuned (transfer learning) for downstream classification tasks on new image datasets.
 
-Github actions are already configured in `.github/workflows/tests.yml`.
-Github actions are already enabled by default when using Github, so, when
-pushing to github, they will be executed automatically for pull requests to
-`main` and to `develop`.
+#### Models for representation learning
 
-#### Travis
+* [Convolutional autoencoder baseline](/image_classification_simulation/models/autoencoder_baseline.py): Convolutional autoencoder (AE) architecture that can be used to learn compact hidden features/representations of the data. The bottleneck of the model can be used for subsequent tasks such as image clustering.
 
-Travis is already configured in (`.travis.yml`).
+#### Models for few shot learning (FSL)
 
-To enable it server-side, just go to https://travis-ci.com/account/repositories and click
-` Manage repositories on GitHub`. Give the permission to run on the git repository you just created.
+* [Prototypical Networks](/image_classification_simulation/models/protonet.py): FSL model that uses feature representations of the images (these representations can come from the trained classification models previously presented) to assign them to a class (method based on distance between the class prototypes and the representation embeddings of the input images).
 
-Note, the link for public project may be https://travis-ci.org/account/repositories .
+#### Models for image clustering
 
-#### Azure
-
-Azure Continuous Integration is already configured in (`.azure_pipeline.yml`).
-
-To enable it server-side, just in azure and select `.azure_pipeline.yml` as the 
-configuration one for Continuous Integration.
+* [Clustering](/image_classification_simulation/models/clustering.py): unsupervised clustering (using K-Means or BIRCH algorithms) that creates class clusters of the data by using learned feaures/representations from a backbone (which can be any of the classification models previously presented).
 
 ## Running the code
 
-### Run the tests
-Just run (from the root folder):
+### Training a classification model
 
-    pytest
+Each model implemented in the repository has a corresponding `config.yaml` configuration file under the `/examples` subfolder. This configuration file sets up the training hyperparameters relevant to the model as well as the architecture and data to use for the training.
 
-### Run the code/examples.
-Note that the code should already compile at this point.
+#### Use Case: training the standard CNN model from scratch on the Amazon domain of the Office31 dataset on a CPU from the terminal
 
-Running examples can be found under the `examples` folder.
+Launch the following command from the main repository folder:
+```
+main --data /examples/data/domain_adaptation_images/amazon/images --output ./output --config /examples/classic_cnn/config.yaml --start-from-scratch
+```
 
-In particular, you will find examples for:
-* local machine (e.g., your laptop).
-* a slurm cluster.
+#### Use Case: fine-tuning the vision transformer on the Amazon domain of the Office31 dataset on a GPU from the terminal
 
-For both these cases, there is the possibility to run with or without Orion.
-(Orion is a hyper-parameter search tool - see https://github.com/Epistimio/orion -
-that is already configured in this project)
+Launch the following command from the main repository folder:
+```
+main --data /examples/data/domain_adaptation_images/amazon/images --output ./output --config /examples/vit/config.yaml --start-from-scratch --gpus 0
+```
 
-#### Run locally
+## Licence
 
-For example, to run on your local machine without Orion:
+The MIT License (MIT)
 
-    cd examples/local
-    sh run.sh
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-This will run a simple MLP on a simple toy task: sum 5 float numbers.
-You should see an almost perfect loss of 0 after a few epochs.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-Note you have two new folders now:
-* output: contains the models and a summary of the results.
-* mlruns: produced by mlflow, contains all the data for visualization.
-You can run mlflow from this folder (`examples/local`) by running
-`mlflow ui`.
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#### Run on a remote cluster (with Slurm)
-
-First, bring you project on the cluster (assuming you didn't create your
-project directly there). To do so, simply login on the cluster and git
-clone your project:
-
-    git clone git@github.com:alzaia/image_classification_simulation.git
-
-Then activate your virtual env, and install the dependencies:
-
-    cd image_classification_simulation
-    pip install -e .
-
-To run with Slurm, just:
-
-    cd examples/slurm
-    sh run.sh
-
-Check the log to see that you got an almost perfect loss (i.e., 0).
-
-#### Run with Orion on the Slurm cluster
-
-This example will run orion for 2 trials (see the orion config file).
-To do so, go into `examples/slurm_orion`.
-Here you can find the orion config file (`orion_config.yaml`), as well as the config
-file (`config.yaml`) for your project (that contains the hyper-parameters).
-
-In general, you will want to run Orion in parallel over N slurm jobs.
-To do so, simply run `sh run.sh` N times.
-
-When Orion has completed the trials, you will find the orion db file and the
-mlruns folder (i.e., the folder containing the mlflow results).
-
-You will also find the output of your experiments in `orion_working_dir`, which
-will contain a folder for every trial.
-Inside these folders, you can find the models (the best one and the last one), the config file with
-the hyper-parameters for this trial, and the log file.
-
-You can check orion status with the following commands:
-(to be run from `examples/slurm_orion`)
-
-    export ORION_DB_ADDRESS='orion_db.pkl'
-    export ORION_DB_TYPE='pickleddb'
-    orion status
-    orion info --name my_exp
-
-### Building docs:
-
-To automatically generate docs for your project, cd to the `docs` folder then run:
-
-    make html
-
-To view the docs locally, open `docs/_build/html/index.html` in your browser.
-
-
-## YOUR PROJECT README:
-
-* __TODO__
+Copyright (c) 2022 Mila - The Quebec AI Institute
