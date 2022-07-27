@@ -56,7 +56,7 @@ Other open-source datasets are available and can be used with the models impleme
 
 #### Models for image clustering
 
-* [Clustering](/image_classification_simulation/models/clustering_tools.py): unsupervised clustering (using K-Means or BIRCH algorithms) that creates class clusters of the data by using learned feaures/representations from a backbone (which can be any of the classification models previously presented).
+* [Clustering](/image_classification_simulation/models/clustering.py): unsupervised clustering (using K-Means or BIRCH algorithms) that creates class clusters of the data by using learned feaures/representations from a backbone (which can be any of the classification models previously presented).
 
 ## Running the code
 
@@ -77,15 +77,6 @@ Launch the following command from the main repository folder:
 ```
 main --data /examples/data/domain_adaptation_images/amazon/images --output ./output --config /examples/vit/config.yaml --start-from-scratch --gpus 0
 ```
-
-### Applying image clustering
-
-TODO
-
-### Using few shot learning
-
-TODO
-
 
 ## Licence
 
