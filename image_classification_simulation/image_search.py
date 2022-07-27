@@ -2,10 +2,10 @@ from PIL import Image
 import typing
 import torch
 import pandas as pd
-import numpy as np
 from torch.utils.data import DataLoader
 from image_classification_simulation.models.model_loader import load_model
 from image_classification_simulation.models.clustering import Clustering
+
 
 def batchify(iterable: typing.Iterable, batch_size: int = 32):
     """Yield successive n-sized batches from lst.
@@ -56,7 +56,7 @@ class ImageSimilaritySearch:
         self.model.eval()
 
         self.dataset_cluster_ids = None
-        self.clustering = Clustering(self.extract_features,hparams)
+        self.clustering = Clustering(self.extract_features, hparams)
 
         # dataset and transformations are the only
         # things we need from the DataModule
@@ -67,7 +67,9 @@ class ImageSimilaritySearch:
             self.image_dataloader.dataset.samples,
             columns=["image_path", "class_label"],
         )
-        self.labels = self.image_dataloader.get_labels()
+        self.labels = [
+            labels for imgs, labels in self.image_dataloader.dataset
+        ]
 
         self.transformation = DataModule.inference_transformation
 
@@ -181,6 +183,7 @@ class ImageSimilaritySearch:
             target_cluster_id = self.clustering.predict(image)
             query_indices = self.dataset["cluster_id"] == target_cluster_id
             if topk:
+                query_image_paths = self.dataset["image_path"].values
                 query_indices = self.sort_query_result(
                     image, query_image_paths, topk
                 )
