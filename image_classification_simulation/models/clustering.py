@@ -1,13 +1,15 @@
-import re
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.cluster import Birch
-from sklearn.neighbors import KNeighborsClassifier,NearestNeighbors
+from sklearn.neighbors import KNeighborsClassifier, NearestNeighbors
 
-class Clustering():
-    def __init__(self, feature_extractor,hparams:dict):
+
+class Clustering:
+    """Clustering wrapper class for the clustering algorithms."""
+
+    def __init__(self, feature_extractor, hparams: dict):
         """Initialize the class.
 
         Parameters
@@ -61,8 +63,8 @@ class Clustering():
     def get_type(self):
         """Get the type of the clustering algorithm."""
         return self.alg_type
-    
-    def fit(self,X : np.array,y : np.array =None):
+
+    def fit(self, X: np.array, y: np.array = None):
         """Fit the clustering algorithm.
 
         Parameters
@@ -73,15 +75,15 @@ class Clustering():
             Array of labels.
         """
         if self.dist_matrix is not None:
-            self.model.fit(self.dist_matrix,y)
+            self.model.fit(self.dist_matrix, y)
         else:
             self.model.fit(X)
         pass
 
     def build_dist_matrix(
-            self,
-            features: torch.Tensor,
-            ) -> torch.Tensor: 
+        self,
+        features: torch.Tensor,
+    ) -> torch.Tensor:
         """Build the distance matrix.
 
         Parameters
@@ -94,7 +96,6 @@ class Clustering():
         torch.Tensor
             Distance matrix.
         """
-
         self.features = features
         self.dist_matrix = torch.cdist(features, features)
         return self.dist_matrix
@@ -112,8 +113,7 @@ class Clustering():
             features = features.cpu().numpy()
             self.model.partial_fit(features)
 
-        
-    def predict(self, imgs: torch.Tensor)->int:  
+    def predict(self, imgs: torch.Tensor) -> int:
         """Predict the clusters for images.
 
         Parameters
@@ -127,7 +127,7 @@ class Clustering():
             predicted cluster id
         """
         z_X = self.extract_features(imgs).cpu()
-        if hasattr(self,'features'):
+        if hasattr(self, "features"):
             dist = torch.cdist(z_X, self.features)
             predicted_label = self.model.predict(dist)
         else:
@@ -151,7 +151,7 @@ class Clustering():
         for batch_images, batch_labels in dataloader:
             features = self.extract_features(batch_images)
             features = features.cpu()  # .numpy()
-            if hasattr(self,'features'):
+            if hasattr(self, "features"):
                 dist = torch.cdist(features, self.features)
                 label = self.model.predict(dist)
             else:
@@ -159,11 +159,7 @@ class Clustering():
             predicted_labels.extend(label)
         return np.array(predicted_labels)
 
-    def find_neighbors(
-        self,
-        imgs: torch.Tensor,
-        k: int =5
-        ):  
+    def find_neighbors(self, imgs: torch.Tensor, k: int = 5):
         """Find the neighbors for images.
 
         Parameters
@@ -180,11 +176,7 @@ class Clustering():
         """
         z_X = self.extract_features(imgs).cpu()
         dist = torch.cdist(z_X, self.features)
-        label = self.model.kneighbors(
-                    dist,
-                    k,
-                    return_distance=False
-                    )
+        label = self.model.kneighbors(dist, k, return_distance=False)
         return label[0]
 
     def get_inertia(self):
