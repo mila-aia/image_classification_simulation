@@ -62,7 +62,8 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         data_dir : string
             Directory path that the data will be downloaded and stored
         eval_dir : string
-            Directory path that the evaluation data will be downloaded and stored
+            Directory path that the evaluation data \
+                will be downloaded and stored
         hyper_params : dictionary
             Hyperparameters relevant to the dataloader module.
         """
