@@ -118,15 +118,16 @@ class Office31Loader(MyDataModule):  # pragma: no cover
 
         if eval_dir is not None:
             self.eval_dataset = ImageFolder(
-                root=eval_dir, transform=self.train_set_transformation
+                root=eval_dir, transform=self.inference_transformation
             )
 
         # get number of class from ImageFolder object
         self.num_classes = len(self.dataset.classes)
         hyper_params["num_classes"] = self.num_classes
 
+        self.labels = self.get_labels()
         self.stratified_sampler = StratifiedBatchSampler(
-            self.get_labels(), self.batch_size, shuffle=True
+            self.labels, self.batch_size, shuffle=True
         )
 
     def get_labels(self):
@@ -160,7 +161,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         elif stage == "eval":
             self.eval_set = self.eval_dataset
 
-    def train_dataloader(self) -> DataLoader:
+    def train_dataloader(self, shuffle=True) -> DataLoader:
         """Creates the training dataloader using the training data parser.
 
         Returns
@@ -171,14 +172,14 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         return DataLoader(
             self.train_set,
             batch_size=self.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             batch_sampler=None,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
         )
 
-    def val_dataloader(self) -> DataLoader:
+    def val_dataloader(self, shuffle=True) -> DataLoader:
         """Creates the validation dataloader using the validation data parser.
 
         Returns
@@ -189,14 +190,14 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         return DataLoader(
             self.val_set,
             batch_size=self.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             batch_sampler=None,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
         )
 
-    def test_dataloader(self) -> DataLoader:
+    def test_dataloader(self, shuffle=True) -> DataLoader:
         """Creates the testing dataloader using the testing data parser.
 
         Returns
@@ -207,14 +208,14 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         return DataLoader(
             self.test_set,
             batch_size=self.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             batch_sampler=None,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
         )
 
-    def eval_dataloader(self) -> DataLoader:
+    def eval_dataloader(self, shuffle=True) -> DataLoader:
         """Creates the evaluation dataloader using the evaluation data parser.
 
         Returns
@@ -225,7 +226,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         return DataLoader(
             self.eval_set,
             batch_size=self.batch_size,
-            shuffle=True,
+            shuffle=shuffle,
             batch_sampler=None,
             num_workers=self.num_workers,
             pin_memory=True,
