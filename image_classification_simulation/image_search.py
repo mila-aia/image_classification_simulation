@@ -1,7 +1,8 @@
-from PIL import Image
 import typing
 import torch
+import numpy as np
 import pandas as pd
+from PIL import Image
 from torch.utils.data import DataLoader
 from image_classification_simulation.models.model_loader import load_model
 from image_classification_simulation.models.clustering import Clustering
@@ -51,12 +52,14 @@ class ImageSimilaritySearch:
         self.model.load_from_checkpoint(
             checkpoint_path=self.path_to_model, strict=False
         )
+        print(">>> model loaded successfully!")
         # have to set to eval here because batch norm
         # has no meaning for one instance
         self.model.eval()
 
         self.dataset_cluster_ids = None
         self.clustering = Clustering(self.extract_features, hparams)
+        print(">>> clustering initialized successfully!")
 
         # dataset and transformations are the only
         # things we need from the DataModule
@@ -67,11 +70,9 @@ class ImageSimilaritySearch:
             self.image_dataloader.dataset.samples,
             columns=["image_path", "class_label"],
         )
-        self.labels = [
-            labels for imgs, labels in self.image_dataloader.dataset
-        ]
-
+        self.labels = self.dataset["class_label"].values
         self.transformation = DataModule.inference_transformation
+        print(">>> dataset loaded successfully!")
 
     def setup(self):
         """Setup the ImageSimilaritySearch class."""
@@ -81,6 +82,7 @@ class ImageSimilaritySearch:
             features = self.build_representations()
             dist_m = self.clustering.build_dist_matrix(features)
             self.clustering.fit(dist_m, self.labels)
+        print(">>> clustering model fitted successfully!")
         # cannot have the cluster ids loaded since the model cannot be used
         # if self.dataset_cluster_ids is None:
         if self.clustering.alg_type != "nn":
@@ -188,7 +190,7 @@ class ImageSimilaritySearch:
                     image, query_image_paths, topk
                 )
 
-        query_image_paths = self.dataset.iloc[query_indices]
+        query_image_paths = self.dataset.iloc[query_indices[0]]
         # self.dataset.groupby('cluster_id').count()
         return query_image_paths
 

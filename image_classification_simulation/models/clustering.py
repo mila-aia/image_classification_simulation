@@ -177,7 +177,9 @@ class Clustering:
         z_X = self.extract_features(imgs).cpu()
         dist = torch.cdist(z_X, self.features)
         label = self.model.kneighbors(dist, k, return_distance=False)
-        return label[0]
+        if len(imgs.shape) == 3:  # if only one image is passed
+            return label[0]
+        return label
 
     def get_inertia(self):
         """Get the inertia of the clustering algorithm."""
