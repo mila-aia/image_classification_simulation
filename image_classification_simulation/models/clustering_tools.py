@@ -128,3 +128,47 @@ def visualize(dataloader: DataLoader, predicted_clusters):
     # predicted_clusters = self.predict(dataloader)
     show_images_in_clusters(images, predicted_clusters)
     return predicted_clusters
+
+
+def evaluate_performance(
+    class_ids: np.array,
+    true_labels: list,
+    find_topk: typing.Callable,
+    dataloader: typing.Iterable,
+    topk: int,
+) -> float:
+    """Evaluate the performance of the model.
+
+    Parameters
+    ----------
+    class_ids : np.array
+        list of class ids from the whole dataset
+    true_labels : list
+        list of true class ids from the evaluation dataset
+    find_topk : typing.Callable
+        function to find top k similar images
+    dataloader : typing.Iterable
+        dataloader used to evaluate the performance
+    topk : int
+        number of top k to evaluate
+
+    Returns
+    -------
+    float
+        accuracy of the model
+    """
+    topk_sim_imgs = [
+        find_topk(b_imgs, topk) for b_imgs, b_labels in dataloader
+    ]
+    # topk_sim_imgs: are ids of topk similar images
+    topk_sim_imgs = np.concatenate(topk_sim_imgs)
+    class_ids = np.array(class_ids)
+    # get class ids of the topk similar images from their data ids
+    pred_class_ids = [
+        class_ids[topk_sim_img] for topk_sim_img in topk_sim_imgs
+    ]
+    pred_class_ids = np.stack(pred_class_ids)
+    total_num_match = 0
+    for pred_class_id, true_label in zip(pred_class_ids, true_labels):
+        total_num_match += (true_label == pred_class_id).sum()
+    return total_num_match / (len(true_labels) * topk)
