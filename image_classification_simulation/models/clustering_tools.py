@@ -4,8 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from torchvision.utils import make_grid
-from sklearn.cluster import MiniBatchKMeans
-from sklearn.cluster import Birch
 from sklearn import metrics
 
 
@@ -113,30 +111,6 @@ def show_images_in_clusters(
         show_grid_images(images_in_cluster.tolist(), num)
 
 
-def get_clustering_alg(hparams: dict):
-    """Initialize the class.
-
-    Parameters
-    ----------
-    hparams : dict
-        hyperparameters
-    """
-    if hparams["clustering_alg"] == "MiniBatchKMeans":
-        clustering_alg = MiniBatchKMeans(
-            n_clusters=hparams["num_clusters"],
-            random_state=hparams["random_state"],
-            batch_size=hparams["clustering_batch_size"],
-            reassignment_ratio=hparams["reassignment_ratio"],
-            verbose=1,
-        )
-    if hparams["clustering_alg"] == "BIRCH":
-        clustering_alg = Birch(
-            # threshold=12.5,
-            n_clusters=hparams["num_clusters"]
-        )
-    return clustering_alg
-
-
 def get_inertia(clustering_alg):
     """Get the inertia of the clustering algorithm."""
     return clustering_alg.inertia_
@@ -154,3 +128,47 @@ def visualize(dataloader: DataLoader, predicted_clusters):
     # predicted_clusters = self.predict(dataloader)
     show_images_in_clusters(images, predicted_clusters)
     return predicted_clusters
+
+
+def eval_clustering_performance(
+    class_ids: np.array,
+    true_labels: list,
+    find_topk: typing.Callable,
+    dataloader: typing.Iterable,
+    topk: int,
+) -> float:
+    """Evaluate the performance of the model.
+
+    Parameters
+    ----------
+    class_ids : np.array
+        list of class ids from the whole dataset
+    true_labels : list
+        list of true class ids from the evaluation dataset
+    find_topk : typing.Callable
+        function to find top k similar images
+    dataloader : typing.Iterable
+        dataloader used to evaluate the performance
+    topk : int
+        number of top k to evaluate
+
+    Returns
+    -------
+    float
+        accuracy of the model
+    """
+    topk_sim_imgs = [
+        find_topk(b_imgs, topk) for b_imgs, b_labels in dataloader
+    ]
+    # topk_sim_imgs: are ids of topk similar images
+    topk_sim_imgs = np.concatenate(topk_sim_imgs)
+    class_ids = np.array(class_ids)
+    # get class ids of the topk similar images from their data ids
+    pred_class_ids = [
+        class_ids[topk_sim_img] for topk_sim_img in topk_sim_imgs
+    ]
+    pred_class_ids = np.stack(pred_class_ids)
+    total_num_match = 0
+    for pred_class_id, true_label in zip(pred_class_ids, true_labels):
+        total_num_match += (true_label == pred_class_id).sum()
+    return total_num_match / (len(true_labels) * topk)

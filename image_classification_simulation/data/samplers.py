@@ -1,8 +1,7 @@
 import random
 from typing import List, Tuple, Iterator
-import typing
+
 import torch
-import numpy as np
 from torch import Tensor
 from torch.utils.data import Sampler
 from torch.utils.data import DataLoader
@@ -17,34 +16,29 @@ class StratifiedBatchSampler:
     Provides equal representation of target classes in each batch
     """
 
-    def __init__(
-        self,
-        labels: typing.Union[torch.Tensor, np.array],
-        batch_size: int,
-        shuffle: bool = True,
-    ):
-        """Initializes a stratified batch sampler.
+    def __init__(self, y, batch_size, shuffle=True):
+        """Initialize the class.
 
         Parameters
         ----------
-        labels : torch.Tensor or numpy.ndarray
-            Target labels for the dataset.
+        y : torch.Tensor
+            target labels
         batch_size : int
-            Batch size.
-        shuffle : bool, optional
-            Shuffle dataset flag, by default True
+            batch size
+        shuffle : bool
+            whether to shuffle the data
         """
-        if torch.is_tensor(labels):
-            labels = labels.numpy()
-        # assert len(labels.shape) == 1, 'label array must be 1D'
-        n_batches = int(len(labels) / batch_size)
+        if torch.is_tensor(y):
+            y = y.numpy()
+        # assert len(y.shape) == 1, 'label array must be 1D'
+        n_batches = int(len(y) / batch_size)
         self.skf = StratifiedKFold(n_splits=n_batches, shuffle=shuffle)
-        self.X = torch.randn(len(labels), 1).numpy()
-        self.labels = labels
+        self.X = torch.randn(len(y), 1).numpy()
+        self.y = y
         self.shuffle = shuffle
 
     def __iter__(self):
-        """Iterates over stratify sampled indicies."""
+        """Creates a sampler iterator."""
         if self.shuffle:
             self.skf.random_state = torch.randint(0, int(1e8), size=()).item()
         for train_idx, test_idx in self.skf.split(self.X, self.y):
@@ -167,11 +161,11 @@ class TaskSampler(Sampler):
         support_images = all_images[:, : self.n_shot].reshape(
             (-1, *all_images.shape[2:])
         )
-        query_images = all_images[:, self.n_shot:].reshape(
+        query_images = all_images[:, self.n_shot :].reshape(
             (-1, *all_images.shape[2:])
         )
         support_labels = all_labels[:, : self.n_shot].flatten()
-        query_labels = all_labels[:, self.n_shot:].flatten()
+        query_labels = all_labels[:, self.n_shot :].flatten()
 
         return (
             support_images,
