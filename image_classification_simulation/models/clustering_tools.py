@@ -130,7 +130,7 @@ def visualize(dataloader: DataLoader, predicted_clusters):
     return predicted_clusters
 
 
-def evaluate_performance(
+def eval_clustering_performance(
     class_ids: np.array,
     true_labels: list,
     find_topk: typing.Callable,
