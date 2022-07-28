@@ -190,8 +190,7 @@ class ImageSimilaritySearch:
                     image, query_image_paths, topk
                 )
 
-        query_image_paths = self.dataset.iloc[query_indices[0]]
-        # self.dataset.groupby('cluster_id').count()
+        query_image_paths = self.dataset.iloc[query_indices]
         return query_image_paths
 
     def sort_query_result(
