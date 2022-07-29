@@ -32,12 +32,12 @@ class ClassicCNN(BaseModel):
         if "num_filters" in hyper_params:
             self.num_filters = hyper_params["num_filters"]
         else:
-            self.num_filters = 8
+            self.num_filters = 4
 
         if "dropout_value" in hyper_params:
             self.dropout_value = hyper_params["dropout_value"]
         else:
-            self.dropout_value = 0.1
+            self.dropout_value = 0.25
 
         # defining network layers
         self.flatten = nn.Flatten()
@@ -49,6 +49,7 @@ class ClassicCNN(BaseModel):
             hyper_params["num_channels"],
             self.num_filters,
             kernel_size=3,
+            stride=1,
             padding=1,
         )
         self.conv2 = nn.Conv2d(
@@ -87,12 +88,30 @@ class ClassicCNN(BaseModel):
             padding=1,
         )
 
+        self.conv7 = nn.Conv2d(
+            self.num_filters * 8,
+            self.num_filters * 16,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+
+        self.conv8 = nn.Conv2d(
+            self.num_filters * 16,
+            self.num_filters * 16,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+        )
+
         self.bn1 = nn.BatchNorm2d(self.num_filters)
         self.bn2 = nn.BatchNorm2d(self.num_filters * 2)
         self.bn3 = nn.BatchNorm2d(self.num_filters * 4)
         self.bn4 = nn.BatchNorm2d(self.num_filters * 4)
         self.bn5 = nn.BatchNorm2d(self.num_filters * 8)
         self.bn6 = nn.BatchNorm2d(self.num_filters * 8)
+        self.bn7 = nn.BatchNorm2d(self.num_filters * 16)
+        self.bn8 = nn.BatchNorm2d(self.num_filters * 16)
 
         def get_output_shape(model, image_dim):
             return model(torch.rand(*(image_dim))).data.shape
@@ -118,7 +137,12 @@ class ClassicCNN(BaseModel):
             self.maxpooling, get_output_shape(self.conv6, conv5_out)
         )
 
-        fc_size = np.prod(list(conv6_out))
+        conv7_out = get_output_shape(self.conv7, conv6_out)
+        conv8_out = get_output_shape(
+            self.maxpooling, get_output_shape(self.conv8, conv7_out)
+        )
+
+        fc_size = np.prod(list(conv8_out))
 
         self.linear1 = nn.Linear(fc_size, 256)
         self.linear2 = nn.Linear(256, 128)
@@ -161,6 +185,18 @@ class ClassicCNN(BaseModel):
             self.maxpooling,
         )
 
+        self.block4 = nn.Sequential(
+            self.conv7,
+            self.bn7,
+            self.activation,
+            self.dropout,
+            self.conv8,
+            self.bn8,
+            self.activation,
+            self.dropout,
+            self.maxpooling,
+        )
+
         self.fc_block = nn.Sequential(
             self.flatten,
             self.linear1,
@@ -173,6 +209,7 @@ class ClassicCNN(BaseModel):
             self.block1,
             self.block2,
             self.block3,
+            self.block4,
             self.fc_block,
         )
 
@@ -312,6 +349,7 @@ class ClassicCNN(BaseModel):
         z_x = self.block1(batch_images)
         z_x = self.block2(z_x)
         z_x = self.block3(z_x)
+        z_x = self.block4(z_x)
         z_x = self.fc_block(z_x)
         logits = self.classifier(z_x)
 
