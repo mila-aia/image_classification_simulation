@@ -170,5 +170,34 @@ def eval_clustering_performance(
     pred_class_ids = np.stack(pred_class_ids)
     total_num_match = 0
     for pred_class_id, true_label in zip(pred_class_ids, true_labels):
-        total_num_match += (true_label == pred_class_id).sum()
-    return total_num_match / (len(true_labels) * topk)
+        score = (true_label == pred_class_id).sum()
+        total_num_match += score
+    return total_num_match / (len(true_labels) * topk), pred_class_ids
+
+
+def accuracy_per_class(
+    class_ids: list, classification_matrix: np.array
+) -> typing.Dict[str, float]:
+    """Evaluate the accuracy of the model per class.
+
+    Parameters
+    ----------
+    class_ids : list
+        list of class ids from the whole dataset
+    classification_matrix : np.array
+        classification matrix
+
+    Returns
+    -------
+    typing.Dict[str, float]
+        accuracy of the model per class
+    """
+    class_acc = {}
+    ids, class_freq = np.unique(class_ids, return_counts=True)
+    for class_id in ids:
+        # all true positive samples
+        indicies = np.array(class_ids) == class_id
+        positive_samples = (classification_matrix[indicies] == class_id).sum()
+        all_samples = classification_matrix[indicies].size
+        class_acc[class_id] = positive_samples / all_samples
+    return class_acc
