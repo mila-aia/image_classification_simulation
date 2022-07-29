@@ -47,6 +47,12 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.data_aug_prob = hyper_params["data_aug_prob"]
         else:
             self.data_aug_prob = 0.5
+        if "sampler" in hyper_params:
+            if hyper_params["sampler"] == "stratified":
+                self.sampler = hyper_params["sampler"]
+            else:
+                self.sampler = None
+                print("No sampler used!")
 
     def __init__(
         self,
@@ -126,9 +132,10 @@ class Office31Loader(MyDataModule):  # pragma: no cover
         hyper_params["num_classes"] = self.num_classes
 
         self.labels = self.get_labels()
-        self.stratified_sampler = StratifiedBatchSampler(
-            self.labels, self.batch_size, shuffle=True
-        )
+        if self.sampler == "stratified":
+            self.stratified_sampler = StratifiedBatchSampler(
+                self.labels, self.batch_size, shuffle=True
+            )
 
     def get_labels(self):
         """Returns the labels of the dataset."""
@@ -173,7 +180,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.train_set,
             batch_size=self.batch_size,
             shuffle=shuffle,
-            batch_sampler=None,
+            batch_sampler=self.sampler,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
@@ -191,7 +198,7 @@ class Office31Loader(MyDataModule):  # pragma: no cover
             self.val_set,
             batch_size=self.batch_size,
             shuffle=shuffle,
-            batch_sampler=None,
+            batch_sampler=self.sampler,
             num_workers=self.num_workers,
             pin_memory=True,
             collate_fn=None,
@@ -429,7 +436,7 @@ class Office31LoaderViT(Office31Loader):  # pragma: no cover
 # import matplotlib as plt
 if __name__ == "__main__":
     # tests the dataloader module
-    args = {"batch_size": 8}
+    args = {"batch_size": 8, "sampler": "stratified"}
     office31_loader = Office31Loader(
         "./examples/data/domain_adaptation_images/amazon/images",
         args,
