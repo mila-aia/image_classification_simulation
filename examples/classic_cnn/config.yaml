@@ -1,12 +1,12 @@
 # general
-batch_size: 8
-optimizer: adamW
+batch_size: 16
+optimizer: adam
 loss: CrossEntropyLoss
-patience: 5
+patience: 10
 lr: 0.0003
 architecture: classic-cnn
 pretrained: False
-max_epoch: 2
+max_epoch: 15
 exp_name: cnn_test_exp
 img_size: 224
 num_classes: 31
