@@ -48,11 +48,19 @@ class MNISTLoader(MyDataModule):  # pragma: no cover
             print("image size set to:", self.image_size)
 
         self.train_set_transformation = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+            [
+                transforms.ToTensor(),
+                transforms.Resize((self.image_size, self.image_size)),
+                transforms.Normalize((0.1307,), (0.3081,)),
+            ]
         )
 
         self.test_set_transformation = transforms.Compose(
-            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+            [
+                transforms.ToTensor(),
+                transforms.Resize((self.image_size, self.image_size)),
+                transforms.Normalize((0.1307,), (0.3081,)),
+            ]
         )
 
     def setup(self, stage: str = None):
