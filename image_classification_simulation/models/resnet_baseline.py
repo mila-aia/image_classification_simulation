@@ -37,7 +37,7 @@ class Resnet(BaseModel):
             hyper_params["freeze_feature_extractor"] = False
         else:
             for param in self.feature_extractor.parameters():
-                param.requires_grad = hyper_params["freeze_feature_extractor"]
+                param.requires_grad = not hyper_params["freeze_feature_extractor"]
 
         # replace the last layer with a linear layer
         layers = list(self.feature_extractor.children())[:-1]
@@ -241,6 +241,7 @@ if __name__ == "__main__":
         "loss": "CrossEntropyLoss",
         "pretrained": True,
         "num_classes": 964,
+        "freeze_feature_extractor": True,
     }
     model = Resnet(hparams).to(device)
     print(model)
